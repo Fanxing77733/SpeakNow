@@ -1,0 +1,6 @@
+# 不上传 GitHub
+docs/
+
+# 个人配置
+.claude/
+CLAUDE.md
