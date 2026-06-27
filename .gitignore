@@ -33,6 +33,9 @@ Thumbs.db
 技術選型.md
 技术选型.md
 
+# 本地音频文件（运行时生成）
+english-speaking-backend/**/practice-audio/
+
 # 环境配置（含敏感信息，本地保留）
 english-speaking-backend/**/application-prod.yml
 *.log
