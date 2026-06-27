@@ -4,3 +4,36 @@ docs/
 # 个人配置
 .claude/
 CLAUDE.md
+
+# Java / Maven
+english-speaking-backend/*/target/
+english-speaking-backend/**/target/
+*.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 不欲上传的工作文件
+技術選型.md
+需求文档111.docx
+需求文档111_v2.docx
+需求文档111_v3.docx
+技術選型.md
+技术选型.md
+
+# 环境配置（含敏感信息，本地保留）
+english-speaking-backend/**/application-prod.yml
+*.log
+*.env

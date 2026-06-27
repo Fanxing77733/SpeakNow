@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.es</groupId>
+        <artifactId>english-speaking-backend</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>es-ai-gateway</artifactId>
+    <packaging>jar</packaging>
+    <name>ES AI Gateway</name>
+    <description>AI Gateway 模块：Adapter 接口+实现、超时/重试配置、请求/响应 DTO、音频处理工具</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-common</artifactId>
+        </dependency>
+
+        <!-- RestTemplate 调用第三方 AI API -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+</project>

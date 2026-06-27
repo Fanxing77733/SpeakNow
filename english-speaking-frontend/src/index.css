@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/* 全局基础样式 */
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 录音呼吸灯动画 */
+@keyframes breathe {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 1.5s ease-in-out infinite;
+}
+
+/* 倒计时最后10秒脉冲动画 */
+@keyframes countdown-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+.animate-countdown-pulse {
+  animation: countdown-pulse 0.8s ease-in-out infinite;
+}
+
+/* 选项按钮点击缩放动画 */
+@keyframes option-click {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+.animate-option-click {
+  animation: option-click 0.2s ease;
+}
+
+/* 录音按钮呼吸灯动画 — opacity 0.6~1.0 正弦变化，周期 1.5s */
+@keyframes recording-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-recording-pulse {
+  animation: recording-pulse 1.5s ease-in-out infinite;
+}
+
+/* 音素纠错面板从下方滑入 */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* 总分渐增入场 */
+@keyframes score-count-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-score-count-in {
+  animation: score-count-in 0.6s ease-out forwards;
+}
