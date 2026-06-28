@@ -71,3 +71,15 @@ export async function endSession(sessionId: number): Promise<ScoreResult> {
     url: `/chat/end/${sessionId}`,
   })
 }
+
+/**
+ * 获取当前用户 active 状态的会话（用于页面刷新后恢复已有对话）
+ *
+ * @returns 会话信息 + 所有历史消息，无 active 会话时返回 404
+ */
+export async function getActiveSession(): Promise<ConversationSession> {
+  return request({
+    method: 'GET',
+    url: '/chat/session/active',
+  })
+}

@@ -120,7 +120,6 @@ const ConversationPage = () => {
     duration,
     startRecording,
     stopRecording,
-    audioBlob,
     error: recorderError,
     reset: resetRecorder,
   } = useRecorder()
@@ -140,6 +139,11 @@ const ConversationPage = () => {
   const userTurnCountRef = useRef(0)
   /** 是否已触发自动结束 */
   const autoEndTriggeredRef = useRef(false)
+  /** 最新录音时长（ref 同步，避免闭包过期） */
+  const durationRef = useRef(0)
+
+  // 同步 duration → ref
+  useEffect(() => { durationRef.current = duration }, [duration])
 
   // ===================== Refs =====================
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -150,21 +154,12 @@ const ConversationPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // ===================== 页面离开时重置 =====================
+  // ===================== 页面离开时仅清理录音资源（保留会话状态） =====================
   useEffect(() => {
     return () => {
-      resetStore()
       resetRecorder()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // ===================== 无会话时重定向 =====================
-  useEffect(() => {
-    if (status === 'idle' && messages.length === 0) {
-      navigate('/conversation', { replace: true })
-    }
-  }, [status, messages.length, navigate])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===================== 评分完成 → 显示弹窗 =====================
   useEffect(() => {
@@ -186,21 +181,14 @@ const ConversationPage = () => {
     }
   }, [error, resetRecorder])
 
-  // ===================== 录音暂存音频 → 发送 =====================
-  useEffect(() => {
-    if (audioBlob && isUploading) {
-      const durationRef = duration;
-      const send = async () => {
-        // 更新用户已发送轮次计数
-        userTurnCountRef.current += 1
-        await sendAudioMessage(audioBlob, durationRef)
-        setIsUploading(false)
-        resetRecorder()
-      }
-      send()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioBlob, isUploading])
+  // ===================== 录音 → 直接发送 =====================
+  const submitBlob = useCallback(async (blob: Blob, dur: number) => {
+    setIsUploading(true)
+    userTurnCountRef.current += 1
+    await sendAudioMessage(blob, dur)
+    setIsUploading(false)
+    resetRecorder()
+  }, [sendAudioMessage, resetRecorder])
 
   // ===================== 查找需要打字的最新 AI 消息 =====================
   useEffect(() => {
@@ -215,10 +203,35 @@ const ConversationPage = () => {
     setTypingMessageIndex(-1)
   }, [messages])
 
+  /** 语音播报开关 */
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
+
+  // ===================== 语音播报 AI 回复 =====================
+  const speakText = useCallback((text: string) => {
+    if (!voiceEnabled || !window.speechSynthesis) return
+    // 取消之前未完成的播报
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'en-US'
+    utterance.rate = 0.9
+    utterance.pitch = 1.0
+    // 找英文语音
+    const voices = window.speechSynthesis.getVoices()
+    const enVoice = voices.find(v => v.lang.startsWith('en'))
+    if (enVoice) utterance.voice = enVoice
+    window.speechSynthesis.speak(utterance)
+  }, [voiceEnabled])
+
   // ===================== AI 消息打字完成回调 =====================
   const handleTypingComplete = useCallback(
     (messageIndex: number) => {
       typingCompleteRef.current.add(messageIndex)
+
+      // 语音播报 AI 回复
+      const msg = messages[messageIndex]
+      if (msg && msg.role === 'ai') {
+        speakText(msg.content)
+      }
 
       // 检查是否应该自动结束对话
       // 条件：用户已发送 5 轮 + 最后一轮 AI 回复已完成 + 尚未触发自动结束
@@ -262,10 +275,12 @@ const ConversationPage = () => {
     if (!isRecording) return
 
     const blob = await stopRecording()
+    // 用 ref 获取最新的 duration，避免闭包过期
+    const finalDuration = durationRef.current
     if (blob) {
-      setIsUploading(true)
+      await submitBlob(blob, finalDuration)
     }
-  }, [isRecording, stopRecording])
+  }, [isRecording, stopRecording, submitBlob])
 
   /** 录音按钮样式和状态 */
   const getRecorderButtonStyle = (): string => {
@@ -391,8 +406,22 @@ const ConversationPage = () => {
             </p>
           </div>
         </div>
-        <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
-          第 {Math.min(currentRound, totalRounds)}/{totalRounds} 轮
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            className={`text-xs px-2 py-1 rounded-full transition-colors ${
+              voiceEnabled
+                ? 'bg-blue-50 text-blue-600'
+                : 'bg-gray-100 text-gray-400'
+            }`}
+            title={voiceEnabled ? '关闭语音播报' : '开启语音播报'}
+          >
+            {voiceEnabled ? '🔊 语音' : '🔇 静音'}
+          </button>
+          <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+            第 {Math.min(currentRound, totalRounds)}/{totalRounds} 轮
+          </div>
         </div>
       </div>
 

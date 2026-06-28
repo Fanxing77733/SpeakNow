@@ -70,10 +70,8 @@ public class ConversationServiceImpl implements ConversationService {
             throw new BusinessException(400, "请选择对话场景");
         }
 
-        // 2. 检查用户是否有 active 状态的会话
-        if (hasActiveSession(userId)) {
-            throw new BusinessException(409, "有进行中的对话，请先结束或继续");
-        }
+        // 2. 自动关闭用户之前的 active 会话（避免 409 阻塞）
+        closeActiveSessions(userId);
 
         // 3. 加载场景 Prompt 模板
         String systemPrompt = scenePromptService.loadScenePrompt(scene);
@@ -279,9 +277,76 @@ public class ConversationServiceImpl implements ConversationService {
         return vo;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ConversationResultVO getActiveSession(Long userId) {
+        // 1. 查找用户 active 状态的会话
+        LambdaQueryWrapper<ConversationSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ConversationSession::getUserId, userId)
+                .eq(ConversationSession::getStatus, "active");
+        ConversationSession session = sessionMapper.selectOne(wrapper);
+
+        if (session == null) {
+            throw new BusinessException(404, "没有进行中的对话");
+        }
+
+        log.info("恢复活跃会话: userId={}, sessionId={}, scene={}", userId, session.getId(), session.getScene());
+
+        // 2. 加载该 session 的所有消息，按轮次和时间排序
+        LambdaQueryWrapper<ConversationMessage> msgWrapper = new LambdaQueryWrapper<>();
+        msgWrapper.eq(ConversationMessage::getSessionId, session.getId())
+                .orderByAsc(ConversationMessage::getRound)
+                .orderByAsc(ConversationMessage::getCreatedAt);
+        List<ConversationMessage> messageEntities = messageMapper.selectList(msgWrapper);
+
+        // 3. 构建 VO
+        ConversationResultVO result = new ConversationResultVO();
+        result.setSessionId(session.getId());
+        result.setScene(session.getScene());
+        result.setStatus(session.getStatus());
+        result.setTotalRounds(session.getTotalRounds());
+
+        MessageVO firstMessage = null;
+        List<MessageVO> messageVOList = new ArrayList<>();
+        for (ConversationMessage entity : messageEntities) {
+            MessageVO vo = new MessageVO();
+            vo.setRound(entity.getRound());
+            vo.setRole(entity.getRole());
+            vo.setContent(entity.getContent());
+            vo.setCreatedAt(entity.getCreatedAt());
+            messageVOList.add(vo);
+
+            if (firstMessage == null && "ai".equals(entity.getRole())) {
+                firstMessage = vo;
+            }
+        }
+
+        result.setFirstMessage(firstMessage);
+        result.setMessages(messageVOList);
+
+        log.info("会话恢复成功: sessionId={}, totalMessages={}, totalRounds={}",
+                session.getId(), messageVOList.size(), session.getTotalRounds());
+
+        return result;
+    }
+
     // ======================== 私有方法 ========================
 
     /** 检查用户是否有 active 状态的会话 */
+    /** 自动关闭用户所有 active 会话，标记为用户主动放弃 */
+    private void closeActiveSessions(Long userId) {
+        List<ConversationSession> activeSessions = sessionMapper.selectList(
+                new LambdaQueryWrapper<ConversationSession>()
+                        .eq(ConversationSession::getUserId, userId)
+                        .eq(ConversationSession::getStatus, "active")
+        );
+        for (ConversationSession s : activeSessions) {
+            s.setStatus("user_aborted");
+            sessionMapper.updateById(s);
+            log.info("自动关闭旧会话: sessionId={}, userId={}", s.getId(), userId);
+        }
+    }
+
     private boolean hasActiveSession(Long userId) {
         LambdaQueryWrapper<ConversationSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ConversationSession::getUserId, userId)

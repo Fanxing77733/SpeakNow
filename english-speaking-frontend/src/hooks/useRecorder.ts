@@ -10,6 +10,7 @@
  * - 波形动画（Web Audio API AnalyserNode）
  */
 import { useRef, useCallback, useState } from 'react'
+import { webmToWav } from '../utils/audio'
 
 interface UseRecorderReturn {
   /** 是否正在录音 */
@@ -95,8 +96,8 @@ export function useRecorder(): UseRecorderReturn {
   const stopRecording = useCallback(async (): Promise<Blob | null> => {
     return new Promise((resolve) => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.onstop = () => {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        mediaRecorderRef.current.onstop = async () => {
+          const rawBlob = new Blob(chunksRef.current, { type: 'audio/webm' })
 
           // 释放麦克风
           if (streamRef.current) {
@@ -113,8 +114,15 @@ export function useRecorder(): UseRecorderReturn {
             return
           }
 
-          setAudioBlob(blob)
-          resolve(blob)
+          // 转 WAV（腾讯云 ASR 要求）
+          try {
+            const wavBlob = await webmToWav(rawBlob)
+            setAudioBlob(wavBlob)
+            resolve(wavBlob)
+          } catch {
+            setAudioBlob(rawBlob)
+            resolve(rawBlob)
+          }
         }
 
         mediaRecorderRef.current.stop()

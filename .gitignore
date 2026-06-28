@@ -36,6 +36,11 @@ Thumbs.db
 # 本地音频文件（运行时生成）
 english-speaking-backend/**/practice-audio/
 
+# 本地工具与测试文件
+tools/
+images/
+*.wav
+
 # 环境配置（含敏感信息，本地保留）
 english-speaking-backend/**/application-prod.yml
 *.log

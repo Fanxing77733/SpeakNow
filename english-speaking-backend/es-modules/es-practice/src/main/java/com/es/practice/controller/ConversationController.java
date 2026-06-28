@@ -71,6 +71,18 @@ public class ConversationController {
         return Result.ok(result);
     }
 
+    /**
+     * 获取当前用户 active 状态的会话（用于页面刷新后恢复已有对话）
+     * @return 会话结果（含 sessionId + 所有历史消息）
+     */
+    @GetMapping("/session/active")
+    public Result<ConversationResultVO> getActiveSession() {
+        Long userId = getCurrentUserId();
+        log.info("获取活跃会话请求: userId={}", userId);
+        ConversationResultVO result = conversationService.getActiveSession(userId);
+        return Result.ok(result);
+    }
+
     /** 从 SecurityContext 获取当前登录用户 ID */
     private Long getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

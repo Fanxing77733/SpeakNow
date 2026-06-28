@@ -21,7 +21,7 @@ import java.util.Random;
  */
 @Slf4j
 @Component
-@Profile("dev")
+@Profile({"dev", "prod"})
 public class MockPronunciationEvalAdapter implements PronunciationEvalAdapter {
 
     private static final Random RANDOM = new Random();

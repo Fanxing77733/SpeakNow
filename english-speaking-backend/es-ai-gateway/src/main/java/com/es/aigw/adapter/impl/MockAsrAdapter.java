@@ -2,7 +2,7 @@ package com.es.aigw.adapter.impl;
 
 import com.es.aigw.adapter.AsrAdapter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@Profile("dev")
+@ConditionalOnProperty(name = "aigw.asr.provider", havingValue = "mock", matchIfMissing = true)
 public class MockAsrAdapter implements AsrAdapter {
 
     private static final String MOCK_TEXT = "Hello, how are you today?";

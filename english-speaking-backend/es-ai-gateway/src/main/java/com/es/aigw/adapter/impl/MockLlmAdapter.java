@@ -4,7 +4,7 @@ import com.es.aigw.adapter.LlmAdapter;
 import com.es.aigw.dto.ChatMessage;
 import com.es.aigw.dto.DialogueScoreResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -17,7 +17,7 @@ import java.util.Random;
  */
 @Slf4j
 @Component
-@Profile("dev")
+@ConditionalOnProperty(name = "aigw.llm.provider", havingValue = "mock", matchIfMissing = true)
 public class MockLlmAdapter implements LlmAdapter {
 
     private final Random random = new Random();

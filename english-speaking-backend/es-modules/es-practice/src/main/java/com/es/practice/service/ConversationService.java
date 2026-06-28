@@ -36,4 +36,11 @@ public interface ConversationService {
      * @return 评分结果
      */
     ScoreResultVO endSession(Long userId, Long sessionId);
+
+    /**
+     * 获取用户当前 active 状态的会话（用于恢复已有会话）
+     * @param userId 当前用户 ID
+     * @return 会话结果（含 sessionId + 所有历史消息）
+     */
+    ConversationResultVO getActiveSession(Long userId);
 }

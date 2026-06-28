@@ -21,7 +21,7 @@
             <artifactId>es-common</artifactId>
         </dependency>
 
-        <!-- RestTemplate 调用第三方 AI API -->
+        <!-- RestTemplate 调用第三方 AI API（ASR + LLM） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

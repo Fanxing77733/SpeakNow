@@ -52,6 +52,8 @@ interface ConversationState {
   // ---------- 动作 ----------
   /** 初始化会话（调用 startSession API） */
   initSession: (scene: Scene, difficulty: ConversationDifficulty) => Promise<void>
+  /** 获取当前 active 会话用于恢复（静默，无会话时返回 null） */
+  fetchActiveSession: () => Promise<ConversationSession | null>
   /** 发送语音消息 */
   sendAudioMessage: (audio: Blob, durationSeconds: number) => Promise<void>
   /** 结束对话并获取评分 */
@@ -124,7 +126,6 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       const session: ConversationSession = await conversationApi.startSession(scene, difficulty)
       set({
         sessionId: session.sessionId,
-        totalRounds: session.totalRounds,
         currentRound: 1,
         messages: [session.firstMessage],
         status: 'active',
@@ -134,6 +135,26 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       const message = extractErrorMessage(error)
       set({ error: message, isLoading: false, status: 'error' })
       throw new Error(message)
+    }
+  },
+
+  fetchActiveSession: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const session: ConversationSession = await conversationApi.getActiveSession()
+      set({
+        sessionId: session.sessionId,
+        scene: session.scene,
+        totalRounds: session.totalRounds,
+        currentRound: session.totalRounds,
+        messages: session.messages && session.messages.length > 0 ? session.messages : [session.firstMessage],
+        status: 'active',
+        isLoading: false,
+      })
+      return session
+    } catch {
+      set({ isLoading: false })
+      return null
     }
   },
 

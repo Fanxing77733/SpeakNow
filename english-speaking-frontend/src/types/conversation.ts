@@ -65,6 +65,8 @@ export interface ConversationSession {
   status: string
   totalRounds: number
   firstMessage: Message
+  /** 历史消息列表（恢复已有会话时返回） */
+  messages?: Message[]
 }
 
 /** 发送消息响应（返回 AI 回复 + ASR 转写文本） */

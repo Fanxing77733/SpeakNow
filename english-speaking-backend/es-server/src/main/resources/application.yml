@@ -57,11 +57,11 @@ aigw:
   max-retries: 3
   rate-limit-per-minute: 60
   asr:
-    provider: tencent  # tencent / aliyun
+    provider: mock       # 改为 tencent 启用腾讯云 ASR（需配 secret-id/secret-key）
   pronunciation:
-    provider: chivox   # chivox / xunfei / xiansheng
+    provider: chivox     # 暂用 Mock，接入真实 API 后改为 chivox/xunfei
   llm:
-    provider: deepseek # deepseek / tongyi / openai
+    provider: mock       # 改为 deepseek 启用真实 LLM（需配 api-key）
 
 ---
 # ======== 生产环境 ========
