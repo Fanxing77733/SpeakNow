@@ -5,7 +5,7 @@
  *
  * TODO: Step 4 实现 — 完整的录音逻辑
  * - 前置校验：录音 <0.5s → "未检测到有效语音"
- * - 录音 >60s → 自动截断
+ * - 录音超过最大时长 → 自动截断（默认 60s，可通过参数配置）
  * - 上传前校验音频 ≤5MB
  * - 波形动画（Web Audio API AnalyserNode）
  */
@@ -29,7 +29,7 @@ interface UseRecorderReturn {
   reset: () => void
 }
 
-export function useRecorder(): UseRecorderReturn {
+export function useRecorder(maxDurationSeconds = 60): UseRecorderReturn {
   const [isRecording, setIsRecording] = useState(false)
   const [duration, setDuration] = useState(0)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
@@ -40,6 +40,8 @@ export function useRecorder(): UseRecorderReturn {
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startTimeRef = useRef<number>(0)
+  const maxDurationRef = useRef(maxDurationSeconds)
+  maxDurationRef.current = maxDurationSeconds
 
   const startRecording = useCallback(async () => {
     // TODO: Step 4 实现
@@ -78,8 +80,8 @@ export function useRecorder(): UseRecorderReturn {
         const elapsed = (Date.now() - startTimeRef.current) / 1000
         setDuration(elapsed)
 
-        // 超过 60 秒自动截断
-        if (elapsed >= 60) {
+        // 超过最大时长自动截断
+        if (elapsed >= maxDurationRef.current) {
           mediaRecorder.stop()
           if (timerRef.current) {
             clearInterval(timerRef.current)

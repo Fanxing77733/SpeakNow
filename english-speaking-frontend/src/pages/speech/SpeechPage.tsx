@@ -22,7 +22,8 @@ export default function SpeechPage() {
   const [toast, setToast] = useState('')
   const prepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const speechTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const { isRecording, duration, startRecording, stopRecording, reset: resetRecorder } = useRecorder()
+  const speechMaxSeconds = selectedTopic?.speechSecondsMax || 120
+  const { isRecording, duration, startRecording, stopRecording, reset: resetRecorder } = useRecorder(speechMaxSeconds)
 
   useEffect(() => {
     loadTopics()
@@ -31,6 +32,13 @@ export default function SpeechPage() {
       clearInterval(speechTimerRef.current!)
     }
   }, [category])
+
+  // 准备倒计时结束 → 开始陈述（放在 useEffect 中避免 React Strict Mode 下 setState 更新器双重调用）
+  useEffect(() => {
+    if (step === 'preparing' && prepTimeLeft === 0 && selectedTopic) {
+      beginSpeaking(selectedTopic)
+    }
+  }, [step, prepTimeLeft])
 
   useEffect(() => {
     if (step === 'speaking' && duration >= (selectedTopic?.speechSecondsMax || 120)) {
@@ -57,7 +65,6 @@ export default function SpeechPage() {
         setPrepTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(prepTimerRef.current!)
-            beginSpeaking(topic)
             return 0
           }
           return prev - 1
@@ -181,7 +188,6 @@ export default function SpeechPage() {
             <div className="flex flex-col items-center gap-3">
               <button
                 onPointerUp={handleStopRecording}
-                onPointerLeave={handleStopRecording}
                 className="w-24 h-24 rounded-full bg-red-500 animate-recording-pulse flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-lg"
               >
                 <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
