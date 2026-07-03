@@ -6,6 +6,8 @@ import com.es.aigw.adapter.LlmAdapter;
 import com.es.aigw.dto.ChatMessage;
 import com.es.aigw.dto.DialogueScoreResult;
 import com.es.aigw.util.AudioValidator;
+import com.es.common.event.PointsEvent;
+import com.es.common.event.PortraitEvent;
 import com.es.common.exception.BusinessException;
 import com.es.practice.dto.ConversationResultVO;
 import com.es.practice.dto.MessageVO;
@@ -20,6 +22,7 @@ import com.es.practice.service.ConversationService;
 import com.es.practice.service.ScenePromptService;
 import com.es.practice.util.InputFilter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +47,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final AsrAdapter asrAdapter;
     private final AudioValidator audioValidator;
     private final InputFilter inputFilter;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ConversationServiceImpl(ConversationSessionMapper sessionMapper,
                                    ConversationMessageMapper messageMapper,
@@ -51,7 +55,8 @@ public class ConversationServiceImpl implements ConversationService {
                                    LlmAdapter llmAdapter,
                                    AsrAdapter asrAdapter,
                                    AudioValidator audioValidator,
-                                   InputFilter inputFilter) {
+                                   InputFilter inputFilter,
+                                   ApplicationEventPublisher eventPublisher) {
         this.sessionMapper = sessionMapper;
         this.messageMapper = messageMapper;
         this.scenePromptService = scenePromptService;
@@ -59,6 +64,7 @@ public class ConversationServiceImpl implements ConversationService {
         this.asrAdapter = asrAdapter;
         this.audioValidator = audioValidator;
         this.inputFilter = inputFilter;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -265,6 +271,25 @@ public class ConversationServiceImpl implements ConversationService {
                 sessionId, successfulRounds,
                 scoreResult.getGrammarScore(), scoreResult.getRelevanceScore(),
                 scoreResult.getFluencyScore(), scoreResult.getTotalScore());
+
+        // 6.5 发布画像更新事件（异步处理）
+        eventPublisher.publishEvent(
+                PortraitEvent.conversationCompleted(userId)
+                        .conversationScores(
+                                sessionId,
+                                session.getScene(),
+                                scoreResult.getGrammarScore() != null ? scoreResult.getGrammarScore().intValue() : 0,
+                                scoreResult.getFluencyScore() != null ? scoreResult.getFluencyScore().intValue() : 0,
+                                scoreResult.getRelevanceScore() != null ? scoreResult.getRelevanceScore().intValue() : 0
+                        )
+        );
+
+        // 6.6 发布积分事件 → 触发闯关进度 +1（LevelProgressListener 异步处理）
+        eventPublisher.publishEvent(
+                PointsEvent.conversationCompleted(userId)
+                        .withReferenceId(sessionId)
+                        .withScore(scoreResult.getTotalScore() != null ? scoreResult.getTotalScore().doubleValue() : 0.0)
+        );
 
         // 7. 返回评分结果
         ScoreResultVO vo = new ScoreResultVO();

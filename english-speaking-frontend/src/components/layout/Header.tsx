@@ -27,19 +27,35 @@ const Header = () => {
 
         {/* 桌面端导航 */}
         {isAuthenticated && (
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4">
             <Link to="/practice" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
               发音评测
             </Link>
             <Link to="/conversation" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
               场景对话
             </Link>
-            <Link to="/assessment" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-              水平测评
+            <Link to="/speech" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              话题陈述
             </Link>
-            <Link to="/progress" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-              学习进度
+            <Link to="/gamification" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              闯关学习
             </Link>
+            <Link to="/pk" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              单词PK
+            </Link>
+            <Link to="/support" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              客服
+            </Link>
+            {user?.role === 'TEACHER' || user?.role === 'ADMIN' ? (
+              <Link to="/admin/teacher/classes" className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                教师后台
+              </Link>
+            ) : null}
+            {user?.role === 'OPERATOR' || user?.role === 'ADMIN' ? (
+              <Link to="/admin/operator/dashboard" className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                运营后台
+              </Link>
+            ) : null}
           </nav>
         )}
 

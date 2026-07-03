@@ -18,6 +18,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
 import { GOAL_OPTIONS, type GoalType } from '../../types/auth'
+import { getPortrait } from '../../api/profile'
+import { TIME_PERIOD_LABELS, CEFR_LABELS, GOAL_LABELS, type PortraitData } from '../../types/profile'
 import { formatDate } from '../../utils/format'
 import Skeleton from '../../components/ui/Skeleton'
 import Toast from '../../components/ui/Toast'
@@ -56,6 +58,20 @@ function maskPhone(phone: string): string {
   return phone
 }
 
+/** 画像统计小组件 */
+function PortraitStat({ label, value, trend }: { label: string; value: string; trend?: string }) {
+  const trendColor =
+    trend === '上升' ? 'text-emerald-600' :
+    trend === '下降' ? 'text-red-500' :
+    'text-gray-600'
+  return (
+    <div className="bg-gray-50 rounded-lg p-3">
+      <p className="text-xs text-gray-500 mb-1">{label}</p>
+      <p className={`text-sm font-semibold ${trend ? trendColor : 'text-gray-900'}`}>{value}</p>
+    </div>
+  )
+}
+
 const ProfilePage = () => {
   const navigate = useNavigate()
   const { user, isLoading, error, fetchProfile, updateProfile, logout, clearError } = useAuthStore()
@@ -80,6 +96,9 @@ const ProfilePage = () => {
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
   // 退出确认弹窗
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  // 画像数据（V2.0）
+  const [portrait, setPortrait] = useState<PortraitData | null>(null)
+  const [portraitLoading, setPortraitLoading] = useState(false)
 
   const ageOptions = Array.from({ length: 94 }, (_, i) => i + 6)
 
@@ -107,6 +126,24 @@ const ProfilePage = () => {
       setGoal(g)
       setInitialValues({ nickname: n, age: a, goal: g })
     }
+  }, [user])
+
+  /** 加载画像数据（V2.0） */
+  useEffect(() => {
+    let cancelled = false
+    async function loadPortrait() {
+      setPortraitLoading(true)
+      try {
+        const data = await getPortrait()
+        if (!cancelled) setPortrait(data)
+      } catch {
+        // 画像加载失败不阻塞页面
+      } finally {
+        if (!cancelled) setPortraitLoading(false)
+      }
+    }
+    if (user) loadPortrait()
+    return () => { cancelled = true }
   }, [user])
 
   /** 是否已修改 */
@@ -253,6 +290,73 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      {/* ====== 用户画像卡片（V2.0） ====== */}
+      {portrait && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">学习画像</h3>
+
+          {/* 基础维度 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <PortraitStat label="年龄" value={portrait.age ? `${portrait.age}岁` : '-'} />
+            <PortraitStat
+              label="学习目标"
+              value={portrait.goal ? (GOAL_LABELS[portrait.goal] || portrait.goal) : '-'}
+            />
+            <PortraitStat
+              label="CEFR等级"
+              value={portrait.cefrLevel ? (CEFR_LABELS[portrait.cefrLevel] || portrait.cefrLevel) : '未测评'}
+            />
+            <PortraitStat
+              label="发音趋势"
+              value={portrait.pronunciationTrend || '-'}
+              trend={portrait.pronunciationTrend}
+            />
+          </div>
+
+          {/* 能力维度 */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 pt-4 border-t border-gray-100">
+            <PortraitStat
+              label="发音均分"
+              value={portrait.avgPronunciationScore != null ? `${portrait.avgPronunciationScore}分` : '-'}
+            />
+            <PortraitStat
+              label="语法准确度"
+              value={portrait.grammarAccuracy != null ? `${portrait.grammarAccuracy}%` : '-'}
+            />
+            <PortraitStat
+              label="偏好时段"
+              value={portrait.preferredTime ? (TIME_PERIOD_LABELS[portrait.preferredTime] || portrait.preferredTime) : '-'}
+            />
+          </div>
+
+          {/* 行为维度 */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-gray-100">
+            <PortraitStat label="连续打卡" value={`${portrait.streakDays ?? 0} 天`} />
+            <PortraitStat label="周活跃" value={`${portrait.weeklyActiveDays ?? 0} 天`} />
+            <PortraitStat label="总练习" value={`${portrait.totalPracticeCount ?? 0} 次`} />
+            <PortraitStat
+              label="平均时长"
+              value={portrait.avgSessionMinutes ? `${portrait.avgSessionMinutes} 分钟` : '-'}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 画像加载中骨架 */}
+      {portraitLoading && !portrait && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <Skeleton variant="text" width={80} height={16} />
+          <div className="grid grid-cols-4 gap-3 mt-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton variant="text" width={40} height={10} />
+                <Skeleton variant="text" width={60} height={16} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ====== 信息编辑卡片 ====== */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">

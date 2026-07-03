@@ -20,6 +20,8 @@ interface ScoreModalProps {
   onNewSession: () => void
   /** 再来一局按钮点击 */
   onClose: () => void
+  /** LearningPath 任务 ID（从学习路径跳转时传入） */
+  learningTaskId?: number
 }
 
 /** 数字渐增动画 Hook */
@@ -101,7 +103,7 @@ function getScoreColor(score: number): string {
   return '#ef4444' // red-500
 }
 
-const ScoreModal = ({ scoreResult, visible, onNewSession, onClose }: ScoreModalProps) => {
+const ScoreModal = ({ scoreResult, visible, onNewSession, onClose, learningTaskId }: ScoreModalProps) => {
   const navigate = useNavigate()
   const displayTotal = useCountUp(scoreResult.totalScore)
   const totalColor = getScoreColor(scoreResult.totalScore)
@@ -162,6 +164,18 @@ const ScoreModal = ({ scoreResult, visible, onNewSession, onClose }: ScoreModalP
 
         {/* 底部按钮 */}
         <div className="px-6 pb-6 flex gap-3">
+          {learningTaskId && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                navigate('/learning')
+              }}
+              className="flex-1 py-3 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors"
+            >
+              返回学习路径
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {

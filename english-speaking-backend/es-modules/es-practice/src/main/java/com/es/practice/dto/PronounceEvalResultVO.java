@@ -29,6 +29,12 @@ public class PronounceEvalResultVO {
     /** 完整度得分 */
     private BigDecimal completenessScore;
 
+    /** 重音准确度得分（V2.0） */
+    private BigDecimal stressScore;
+
+    /** 语调自然度得分（V2.0） */
+    private BigDecimal intonationScore;
+
     /** 逐词评测详情 */
     private List<WordResultVO> wordResults;
 }

@@ -14,3 +14,5 @@ export type {
 } from './conversation'
 export { SCENE_CONFIGS, DIFFICULTY_LABELS } from './conversation'
 export type { ProgressSummaryData, ProgressSummaryResponse } from './progress'
+export type { PortraitData } from './profile'
+export { TIME_PERIOD_LABELS, CEFR_LABELS, GOAL_LABELS } from './profile'

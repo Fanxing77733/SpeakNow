@@ -10,7 +10,6 @@ import com.es.assessment.mapper.AssessmentQuestionMapper;
 import com.es.assessment.mapper.AssessmentRecordMapper;
 import com.es.assessment.service.AssessmentService;
 import com.es.common.exception.BusinessException;
-import com.es.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,14 +39,11 @@ public class AssessmentServiceImpl implements AssessmentService {
 
     private final AssessmentQuestionMapper questionMapper;
     private final AssessmentRecordMapper recordMapper;
-    private final UserService userService;
 
     public AssessmentServiceImpl(AssessmentQuestionMapper questionMapper,
-                                 AssessmentRecordMapper recordMapper,
-                                 UserService userService) {
+                                 AssessmentRecordMapper recordMapper) {
         this.questionMapper = questionMapper;
         this.recordMapper = recordMapper;
-        this.userService = userService;
     }
 
     @Override
@@ -185,9 +181,6 @@ public class AssessmentServiceImpl implements AssessmentService {
         record.setAnswersJson(toJsonString(answerDetails));
         record.setCreatedAt(LocalDateTime.now());
         recordMapper.insert(record);
-
-        // 7. 更新 users 表的 level 字段
-        userService.updateLevel(userId, resultLevel);
 
         log.info("测评完成: userId={}, totalScore={}, level={}, recordId={}",
                 userId, totalScore, resultLevel, record.getId());

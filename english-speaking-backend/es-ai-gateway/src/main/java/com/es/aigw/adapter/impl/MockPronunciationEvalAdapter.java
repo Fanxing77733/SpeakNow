@@ -47,11 +47,13 @@ public class MockPronunciationEvalAdapter implements PronunciationEvalAdapter {
         // 拆分参考文本为单词
         String[] words = referenceText.replaceAll("[^a-zA-Z' ]", "").split("\\s+");
 
-        // 生成各维度分（随机 75-95）
+        // 生成各维度分（随机 75-95），V2.0 五维评分
         int accuracy = randomScore(75, 95);
         int fluency = randomScore(75, 95);
         int completeness = randomScore(75, 95);
-        BigDecimal totalScore = BigDecimal.valueOf((accuracy + fluency + completeness) / 3.0)
+        int stress = randomScore(70, 95);
+        int intonation = randomScore(70, 95);
+        BigDecimal totalScore = BigDecimal.valueOf((accuracy + fluency + completeness + stress + intonation) / 5.0)
                 .setScale(1, RoundingMode.HALF_UP);
 
         // 生成逐词结果
@@ -65,6 +67,8 @@ public class MockPronunciationEvalAdapter implements PronunciationEvalAdapter {
         result.setAccuracyScore(BigDecimal.valueOf(accuracy));
         result.setFluencyScore(BigDecimal.valueOf(fluency));
         result.setCompletenessScore(BigDecimal.valueOf(completeness));
+        result.setStressScore(BigDecimal.valueOf(stress));
+        result.setIntonationScore(BigDecimal.valueOf(intonation));
         result.setTotalScore(totalScore);
         result.setWordResults(wordResults);
         result.setAsrText(referenceText);

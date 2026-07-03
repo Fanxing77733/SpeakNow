@@ -24,6 +24,12 @@ public class PronunciationEvalResult {
     /** 完整度得分 0-100 */
     private BigDecimal completenessScore;
 
+    /** 重音准确度得分 0-100（V2.0） */
+    private BigDecimal stressScore;
+
+    /** 语调自然度得分 0-100（V2.0） */
+    private BigDecimal intonationScore;
+
     /** 综合总分 0-100 */
     private BigDecimal totalScore;
 

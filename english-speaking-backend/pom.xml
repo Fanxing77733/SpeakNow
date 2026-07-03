@@ -34,6 +34,9 @@
         <module>es-modules/es-assessment</module>
         <module>es-modules/es-practice</module>
         <module>es-modules/es-learning</module>
+        <module>es-modules/es-gamification</module>
+        <module>es-admin</module>
+        <module>es-support</module>
         <module>es-server</module>
     </modules>
 
@@ -73,6 +76,21 @@
             <dependency>
                 <groupId>com.es</groupId>
                 <artifactId>es-learning</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.es</groupId>
+                <artifactId>es-gamification</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.es</groupId>
+                <artifactId>es-admin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.es</groupId>
+                <artifactId>es-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

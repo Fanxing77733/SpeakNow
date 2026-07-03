@@ -6,6 +6,11 @@ jwt:
   secret: english-speaking-default-secret-key-2026
   expiration: 604800000
 
+wechat:
+  app-id: ${WECHAT_APP_ID:}
+  app-secret: ${WECHAT_APP_SECRET:}
+  redirect-uri: ${WECHAT_REDIRECT_URI:http://localhost:5173/login}
+
 ---
 # ======== 开发环境 ========
 spring:

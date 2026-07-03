@@ -7,6 +7,8 @@ import com.es.aigw.dto.PhonemeResult;
 import com.es.aigw.dto.PronunciationEvalResult;
 import com.es.aigw.dto.WordResult;
 import com.es.aigw.util.AudioValidator;
+import com.es.common.event.PointsEvent;
+import com.es.common.event.PortraitEvent;
 import com.es.common.exception.BusinessException;
 import com.es.practice.dto.ContentSentenceVO;
 import com.es.practice.dto.PhonemeResultVO;
@@ -20,6 +22,7 @@ import com.es.practice.service.PracticeService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +52,7 @@ public class PracticeServiceImpl implements PracticeService {
     private final PronunciationEvalAdapter pronunciationEvalAdapter;
     private final AudioValidator audioValidator;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${practice.audio.local-path:./practice-audio}")
     private String audioLocalPath;
@@ -58,13 +62,15 @@ public class PracticeServiceImpl implements PracticeService {
                                AsrAdapter asrAdapter,
                                PronunciationEvalAdapter pronunciationEvalAdapter,
                                AudioValidator audioValidator,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               ApplicationEventPublisher eventPublisher) {
         this.contentSentenceMapper = contentSentenceMapper;
         this.practiceRecordMapper = practiceRecordMapper;
         this.asrAdapter = asrAdapter;
         this.pronunciationEvalAdapter = pronunciationEvalAdapter;
         this.audioValidator = audioValidator;
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -153,6 +159,8 @@ public class PracticeServiceImpl implements PracticeService {
         record.setAccuracyScore(evalResult.getAccuracyScore());
         record.setFluencyScore(evalResult.getFluencyScore());
         record.setCompletenessScore(evalResult.getCompletenessScore());
+        record.setStressScore(evalResult.getStressScore());
+        record.setIntonationScore(evalResult.getIntonationScore());
         record.setEvalDetailJson(evalDetailJson);
         record.setStatus("completed");
         record.setDurationSeconds(duration);
@@ -160,6 +168,25 @@ public class PracticeServiceImpl implements PracticeService {
         practiceRecordMapper.insert(record);
 
         log.info("评测记录已保存: recordId={}, userId={}, status=completed", record.getId(), userId);
+
+        // 8.5 发布画像更新事件（异步处理，不阻塞主流程）
+        eventPublisher.publishEvent(
+                PortraitEvent.practiceCompleted(userId)
+                        .practiceScores(
+                                evalResult.getTotalScore() != null ? evalResult.getTotalScore().intValue() : 0,
+                                evalResult.getAccuracyScore() != null ? evalResult.getAccuracyScore().intValue() : 0,
+                                evalResult.getFluencyScore() != null ? evalResult.getFluencyScore().intValue() : 0,
+                                evalResult.getCompletenessScore() != null ? evalResult.getCompletenessScore().intValue() : 0,
+                                duration
+                        )
+        );
+
+        // 8.6 发布积分事件 → 触发闯关进度 +1（LevelProgressListener 异步处理）
+        eventPublisher.publishEvent(
+                PointsEvent.practiceCompleted(userId)
+                        .withReferenceId(record.getId())
+                        .withScore(evalResult.getTotalScore() != null ? evalResult.getTotalScore().doubleValue() : 0.0)
+        );
 
         // 9. 构建返回 VO
         return buildResultVO(record.getId(), asrText, evalResult);
@@ -261,6 +288,8 @@ public class PracticeServiceImpl implements PracticeService {
         vo.setAccuracyScore(evalResult.getAccuracyScore());
         vo.setFluencyScore(evalResult.getFluencyScore());
         vo.setCompletenessScore(evalResult.getCompletenessScore());
+        vo.setStressScore(evalResult.getStressScore());
+        vo.setIntonationScore(evalResult.getIntonationScore());
 
         // 转换逐词结果，计算 color 字段
         if (evalResult.getWordResults() != null) {
@@ -283,6 +312,8 @@ public class PracticeServiceImpl implements PracticeService {
         vo.setAccuracyScore(record.getAccuracyScore());
         vo.setFluencyScore(record.getFluencyScore());
         vo.setCompletenessScore(record.getCompletenessScore());
+        vo.setStressScore(record.getStressScore());
+        vo.setIntonationScore(record.getIntonationScore());
 
         // 从 eval_detail_json 反序列化逐词结果
         if (record.getEvalDetailJson() != null && !record.getEvalDetailJson().isEmpty()) {

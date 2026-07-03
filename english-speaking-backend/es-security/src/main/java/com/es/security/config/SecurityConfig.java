@@ -66,6 +66,16 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**", "/doc.html", "/webjars/**").permitAll()
                 // 健康检查放行
                 .requestMatchers("/actuator/health").permitAll()
+                // FAQ 公开接口放行
+                .requestMatchers("/api/v1/support/faq/**").permitAll()
+                // 微信 OAuth 回调放行
+                .requestMatchers("/api/v1/auth/wechat/**").permitAll()
+                // 管理后台—运营端：OPERATOR / ADMIN
+                .requestMatchers("/api/v1/admin/operator/**").hasAnyRole("OPERATOR", "ADMIN")
+                // 管理后台—教师端：TEACHER / ADMIN
+                .requestMatchers("/api/v1/admin/teacher/**").hasAnyRole("TEACHER", "ADMIN")
+                // 管理后台—通用：仅 ADMIN
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 // 其余接口需要认证
                 .anyRequest().authenticated()
             )

@@ -20,6 +20,8 @@ public class UserVO {
     private String goal;
     private String level;
     private String cefrLevel;
+    private String role;
+    private String status;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
 }

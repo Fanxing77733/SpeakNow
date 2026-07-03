@@ -26,4 +26,11 @@ public interface LlmAdapter {
      * @return 评分结果（语法/相关性/流利度 + 文字评语）
      */
     DialogueScoreResult scoreDialogue(String dialogueHistory);
+
+    /**
+     * 语法纠错（V2.0，独立 Prompt，Temperature=0.1）
+     * @param text 用户输入的英文文本
+     * @return LLM 返回的纠错 JSON 字符串
+     */
+    String checkGrammar(String text);
 }

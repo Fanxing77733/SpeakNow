@@ -147,6 +147,38 @@ public class MockLlmAdapter implements LlmAdapter {
         }
     }
 
+    @Override
+    public String checkGrammar(String text) {
+        log.info("Mock LLM 语法纠错开始, 文本长度={}", text != null ? text.length() : 0);
+        try {
+            Thread.sleep(400 + random.nextInt(301));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // 模拟检测常见错误并返回纠错 JSON
+        String json;
+        String lower = text.toLowerCase();
+        if (lower.contains("go to school yesterday") || lower.contains("go yesterday")) {
+            json = "{\"corrections\":[{\"original\":\"He go to school yesterday.\",\"corrected\":\"He went to school yesterday.\",\"error_type\":\"grammar\",\"explanation\":\"在一般过去时中，go的过去式应为went。\"}]}";
+        } else if (lower.contains("i is") || lower.contains("he are") || lower.contains("they is")) {
+            json = "{\"corrections\":[{\"original\":\""
+                    + escapeJson(text) + "\",\"corrected\":\""
+                    + escapeJson(text.replaceAll("(?i)i is", "I am").replaceAll("(?i)he are", "he is").replaceAll("(?i)they is", "they are"))
+                    + "\",\"error_type\":\"grammar\",\"explanation\":\"主谓一致错误，主语和谓语be动词应在人称和数上保持一致。\"}]}";
+        } else {
+            // 无明显错误，返回空 corrections
+            json = "{\"corrections\":[]}";
+        }
+
+        log.info("Mock 语法纠错完成");
+        return json;
+    }
+
+    private String escapeJson(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
     /** 从对话历史中获取最后一条用户消息 */
     private String getLastUserContent(List<ChatMessage> messages) {
         for (int i = messages.size() - 1; i >= 0; i--) {

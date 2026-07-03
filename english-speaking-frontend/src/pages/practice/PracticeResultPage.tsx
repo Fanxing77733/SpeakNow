@@ -12,9 +12,10 @@
  * - /practice/result?recordId=123（历史记录直链）
  * - 缺少 result 且无 recordId → 重定向 /practice
  */
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { getResultDetail } from '../../api/practice'
+import { request } from '../../api/client'
 import type { PronounceEvalResult, WordResult, PhonemeResult } from '../../types/practice'
 
 // ============================================================
@@ -319,7 +320,7 @@ const PracticeResultPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const routeState = location.state as { result?: PronounceEvalResult; sentence?: { id: number; sentence: string } } | null
+  const routeState = location.state as { result?: PronounceEvalResult; sentence?: { id: number; sentence: string }; learningTaskId?: number } | null
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search])
   const recordIdParam = queryParams.get('recordId')
 
@@ -327,6 +328,10 @@ const PracticeResultPage = () => {
   const [result, setResult] = useState<PronounceEvalResult | null>(routeState?.result ?? null)
   const [loading, setLoading] = useState(!routeState?.result && !!recordIdParam)
   const [fetchError, setFetchError] = useState<string | null>(null)
+
+  // ========== LearningPath 任务自动完成 ==========
+  const learningTaskId = routeState?.learningTaskId
+  const taskCompletedRef = useRef(false)
 
   // 从 API 加载历史记录
   useEffect(() => {
@@ -362,6 +367,14 @@ const PracticeResultPage = () => {
       clearTimeout(t2)
     }
   }, [result?.recordId]) // 仅当 recordId 变化时重新触发
+
+  // LearningPath 任务自动完成（仅触发一次）
+  useEffect(() => {
+    if (!learningTaskId || taskCompletedRef.current) return
+    taskCompletedRef.current = true
+    request<unknown>({ method: 'POST', url: `/path/task/${learningTaskId}/complete` })
+      .catch(() => { /* 静默失败，不影响主流程 */ })
+  }, [learningTaskId])
 
   // ========== 音素面板状态 ==========
   const [phonemeTarget, setPhonemeTarget] = useState<{ word: string; wordResult: WordResult } | null>(null)
@@ -418,7 +431,7 @@ const PracticeResultPage = () => {
     return null
   }
 
-  const { asrText, totalScore, accuracyScore, fluencyScore, completenessScore, wordResults } = result
+  const { asrText, totalScore, accuracyScore, fluencyScore, completenessScore, stressScore, intonationScore, wordResults } = result
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -476,6 +489,22 @@ const PracticeResultPage = () => {
               animated={showStep2}
               description="对参考文本的覆盖完整度"
             />
+            {stressScore != null && (
+              <DimensionRow
+                label="重音准确度"
+                score={stressScore}
+                animated={showStep2}
+                description="单词重音位置的准确性（V2.0）"
+              />
+            )}
+            {intonationScore != null && (
+              <DimensionRow
+                label="语调自然度"
+                score={intonationScore}
+                animated={showStep2}
+                description="句子语调升降的自然程度（V2.0）"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -548,6 +577,15 @@ const PracticeResultPage = () => {
       {/* 底部操作 */}
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        {learningTaskId && (
+          <button
+            onClick={() => navigate('/learning')}
+            className="flex-1 py-3 rounded-xl bg-green-600 text-white text-sm font-medium
+              hover:bg-green-700 active:bg-green-800 transition-colors shadow-sm"
+          >
+            返回学习路径
+          </button>
+        )}
         <button
           onClick={() =>
             navigate('/practice', {

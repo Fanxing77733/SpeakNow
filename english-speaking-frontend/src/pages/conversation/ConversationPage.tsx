@@ -16,8 +16,11 @@ import Skeleton from '../../components/ui/Skeleton'
 import { useConversationStore } from '../../stores/conversationStore'
 import { useRecorder } from '../../hooks/useRecorder'
 import { formatDuration } from '../../utils/format'
+import { playAudioBlob } from '../../utils/audio'
+import { synthesizeTTS } from '../../api/tts'
 import { SCENE_CONFIGS, DIFFICULTY_LABELS } from '../../types/conversation'
 import type { Scene, ConversationDifficulty } from '../../types/conversation'
+import { request } from '../../api/client'
 
 // ======================== 打字机效果组件 ========================
 
@@ -90,10 +93,11 @@ const ConversationPage = () => {
 
   // 从路由 state 获取场景信息（用于 UI 展示）
   const routeState = location.state as
-    | { scene?: Scene; difficulty?: ConversationDifficulty }
+    | { scene?: Scene; difficulty?: ConversationDifficulty; learningTaskId?: number }
     | undefined
   const scene = routeState?.scene
   const difficulty = routeState?.difficulty
+  const learningTaskId = routeState?.learningTaskId
 
   // 场景配置（用于顶部展示）
   const sceneConfig = SCENE_CONFIGS.find((s) => s.value === scene)
@@ -154,23 +158,32 @@ const ConversationPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // ===================== 页面离开时仅清理录音资源（保留会话状态） =====================
+  // ===================== 页面离开时清理录音资源 + 停止语音播报 =====================
   useEffect(() => {
     return () => {
       resetRecorder()
+      window.speechSynthesis?.cancel()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ===================== 评分完成 → 显示弹窗 =====================
+  // ===================== 评分完成 → 自动完成 LearningPath 任务 + 显示弹窗 =====================
+  const taskCompletedRef = useRef(false)
+
   useEffect(() => {
     if (status === 'completed' && scoreResult) {
+      // 自动完成 LearningPath 任务（仅触发一次）
+      if (learningTaskId && !taskCompletedRef.current) {
+        taskCompletedRef.current = true
+        request<unknown>({ method: 'POST', url: `/path/task/${learningTaskId}/complete` })
+          .catch(() => { /* 静默失败 */ })
+      }
       // 稍微延迟，让用户看到最后的消息
       const timer = setTimeout(() => {
         setShowScoreModal(true)
       }, 1500)
       return () => clearTimeout(timer)
     }
-  }, [status, scoreResult])
+  }, [status, scoreResult, learningTaskId])
 
   // ===================== 错误 → 显示 Toast =====================
   useEffect(() => {
@@ -206,16 +219,28 @@ const ConversationPage = () => {
   /** 语音播报开关 */
   const [voiceEnabled, setVoiceEnabled] = useState(true)
 
-  // ===================== 语音播报 AI 回复 =====================
-  const speakText = useCallback((text: string) => {
-    if (!voiceEnabled || !window.speechSynthesis) return
-    // 取消之前未完成的播报
+  // ===================== 语音播报 AI 回复（后端 TTS + Web Speech API 降级） =====================
+  const speakText = useCallback(async (text: string) => {
+    if (!voiceEnabled) return
+
+    // 优先使用后端 Edge TTS
+    try {
+      const blob = await synthesizeTTS(text)
+      if (blob && blob.size > 0) {
+        await playAudioBlob(blob)
+        return
+      }
+    } catch {
+      // 降级到 Web Speech API
+    }
+
+    // Web Speech API 降级
+    if (!window.speechSynthesis) return
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'en-US'
     utterance.rate = 0.9
     utterance.pitch = 1.0
-    // 找英文语音
     const voices = window.speechSynthesis.getVoices()
     const enVoice = voices.find(v => v.lang.startsWith('en'))
     if (enVoice) utterance.voice = enVoice
@@ -612,6 +637,7 @@ const ConversationPage = () => {
           visible={showScoreModal}
           onNewSession={handleNewSession}
           onClose={() => setShowScoreModal(false)}
+          learningTaskId={learningTaskId}
         />
       )}
 

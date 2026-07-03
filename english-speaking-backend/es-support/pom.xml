@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.es</groupId>
+        <artifactId>english-speaking-backend</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>es-support</artifactId>
+    <packaging>jar</packaging>
+    <name>ES Support</name>
+    <description>智能客服模块：FAQ 帮助中心 + LLM RAG 对话客服 + 人工工单</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-ai-gateway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+    </dependencies>
+</project>

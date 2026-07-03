@@ -45,6 +45,18 @@
             <groupId>com.es</groupId>
             <artifactId>es-learning</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-gamification</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-admin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.es</groupId>
+            <artifactId>es-support</artifactId>
+        </dependency>
 
         <!-- ======== Spring Boot Starters ======== -->
         <dependency>
@@ -54,6 +66,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- ======== MyBatis-Plus ======== -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
         <!-- ======== 数据库 ======== -->

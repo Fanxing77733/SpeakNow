@@ -61,3 +61,26 @@ function writeString(view: DataView, offset: number, str: string) {
     view.setUint8(offset + i, str.charCodeAt(i))
   }
 }
+
+/**
+ * 播放音频 Blob（用于后端 TTS 返回的 MP3/WAV）
+ * @returns Promise，播放完成后 resolve
+ */
+export function playAudioBlob(blob: Blob): Promise<void> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob)
+    const audio = new Audio(url)
+    audio.onended = () => {
+      URL.revokeObjectURL(url)
+      resolve()
+    }
+    audio.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve()
+    }
+    audio.play().catch(() => {
+      URL.revokeObjectURL(url)
+      resolve()
+    })
+  })
+}

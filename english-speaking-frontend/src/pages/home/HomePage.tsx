@@ -91,32 +91,17 @@ const HomePage = () => {
     navigate('/login')
   }
 
-  // 快捷入口配置
+  // 快捷入口配置（V2.0 扩展至 10 个）
   const quickEntries: QuickEntryProps[] = [
-    {
-      icon: '🎤',
-      title: '发音评测',
-      desc: '练习发音，获得实时反馈',
-      path: '/practice',
-    },
-    {
-      icon: '💬',
-      title: '情景对话',
-      desc: '选择场景，与AI对话练习',
-      path: '/conversation',
-    },
-    {
-      icon: '📋',
-      title: '英语测评',
-      desc: '测试你的英语水平',
-      path: '/assessment',
-    },
-    {
-      icon: '📊',
-      title: '学习进度',
-      desc: '查看你的学习数据',
-      path: '/progress',
-    },
+    { icon: '🎤', title: '发音评测', desc: '练习发音，获得实时反馈', path: '/practice' },
+    { icon: '💬', title: '情景对话', desc: '46个场景，与AI对话练习', path: '/conversation' },
+    { icon: '📋', title: '英语测评', desc: '自适应CEFR测评', path: '/adaptive' },
+    { icon: '📊', title: '学习进度', desc: '图表+雷达图可视化', path: '/progress' },
+    { icon: '🎭', title: '角色扮演', desc: '沉浸式角色对话体验', path: '/roleplay' },
+    { icon: '📝', title: '语法纠错', desc: 'AI语法检查与错题本', path: '/grammar' },
+    { icon: '🗺️', title: '学习路径', desc: '个性化学习路线', path: '/learning' },
+    { icon: '🏆', title: '闯关学习', desc: '游戏化闯关+积分勋章', path: '/gamification' },
+    { icon: '👥', title: '学习社区', desc: '小组学习+语音挑战', path: '/community' },
   ]
 
   return (

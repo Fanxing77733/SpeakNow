@@ -30,11 +30,17 @@ public class JwtUtil {
 
     /** 生成 JWT Token，7 天有效 */
     public String generateToken(Long userId) {
+        return generateToken(userId, "LEARNER");
+    }
+
+    /** 生成带角色的 JWT Token */
+    public String generateToken(Long userId, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
@@ -56,6 +62,13 @@ public class JwtUtil {
     public Long getUserId(String token) {
         Claims claims = getClaims(token);
         return Long.parseLong(claims.getSubject());
+    }
+
+    /** 从 Token 中提取角色 */
+    public String getRoleFromToken(String token) {
+        Claims claims = getClaims(token);
+        String role = claims.get("role", String.class);
+        return role != null ? role : "LEARNER";
     }
 
     private Claims getClaims(String token) {

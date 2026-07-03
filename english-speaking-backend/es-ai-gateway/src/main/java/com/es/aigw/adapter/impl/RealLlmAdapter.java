@@ -174,6 +174,42 @@ public class RealLlmAdapter implements LlmAdapter {
         }
     }
 
+    @Override
+    public String checkGrammar(String text) {
+        log.info("RealLlmAdapter checkGrammar 开始, 文本长度={}", text != null ? text.length() : 0);
+
+        if (text == null || text.isBlank()) {
+            return "{\"corrections\":[]}";
+        }
+
+        String grammarSystemPrompt = """
+                你是一名英语语法纠错专家。请检查用户输入的英文文本，找出所有语法、拼写、用词和句式错误。
+                请按以下JSON格式返回（只返回JSON，不要包含任何其他文字）：
+                {
+                  "corrections": [
+                    {
+                      "original": "原始错误文本片段",
+                      "corrected": "纠正后的文本",
+                      "error_type": "spelling或grammar或word_choice或sentence",
+                      "explanation": "用中文解释错误原因和修改理由"
+                    }
+                  ]
+                }
+                如果文本完全正确，返回 {"corrections":[]}""";
+
+        List<ChatMessage> messages = List.of(
+                new ChatMessage("user", "请检查以下英文文本的语法错误：\n\n" + text)
+        );
+
+        String response = chat(grammarSystemPrompt, messages, 0.1);
+        if (response == null || response.isBlank()) {
+            return "{\"corrections\":[]}";
+        }
+
+        // 提取JSON（可能被markdown代码块包裹）
+        return extractJson(response);
+    }
+
     // ======================== 私有方法 ========================
 
     /** 构建评分专用 System Prompt */

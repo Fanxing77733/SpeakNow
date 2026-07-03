@@ -12,10 +12,17 @@
  * - 登录成功跳转 redirect 参数或首页
  * - 已登录用户自动跳转首页
  */
-import { useState, type FormEvent, type ChangeEvent } from 'react'
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
 import Toast from '../../components/ui/Toast'
+
+/** 根据角色返回默认首页 */
+const getHomePath = (role?: string | null) => {
+  if (role === 'TEACHER') return '/admin/teacher/classes'
+  if (role === 'OPERATOR' || role === 'ADMIN') return '/admin/operator/dashboard'
+  return '/'
+}
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -27,9 +34,20 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{ account?: string; password?: string }>({})
 
-  // 已登录用户自动跳转首页
+  // 微信 OAuth 回调：从 URL 参数获取 token 自动登录
+  useEffect(() => {
+    const token = searchParams.get('token')
+    if (token) {
+      useAuthStore.getState().setAuth(token, null as any)
+      const redirect = searchParams.get('redirect') || getHomePath()
+      navigate(redirect, { replace: true })
+    }
+  }, [searchParams])
+
+  // 已登录用户按角色跳转
   if (isAuthenticated) {
-    const redirect = searchParams.get('redirect') || '/'
+    const role = useAuthStore.getState().user?.role
+    const redirect = searchParams.get('redirect') || getHomePath(role)
     navigate(redirect, { replace: true })
     return null
   }
@@ -59,7 +77,8 @@ const LoginPage = () => {
 
     try {
       await login({ account: account.trim(), password })
-      const redirect = searchParams.get('redirect') || '/'
+      const role = useAuthStore.getState().user?.role
+      const redirect = searchParams.get('redirect') || getHomePath(role)
       navigate(redirect, { replace: true })
     } catch {
       // 错误已在 Store 中设置，此处仅阻止跳转
@@ -217,6 +236,24 @@ const LoginPage = () => {
                 {isLoading ? '登录中...' : '登录'}
               </button>
             </form>
+
+            {/* 微信登录按钮 */}
+            <div className="mt-4">
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                <div className="relative flex justify-center text-xs"><span className="bg-white px-2 text-gray-400">其他方式登录</span></div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { window.location.href = '/api/v1/auth/wechat/authorize' }}
+                className="w-full py-2.5 px-4 border border-green-500 text-green-600 rounded-lg font-medium hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 00.167-.054l1.903-1.114a.864.864 0 01.717-.098 10.16 10.16 0 002.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178A1.17 1.17 0 014.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178 1.17 1.17 0 01-1.162-1.178c0-.651.52-1.18 1.162-1.18z"/>
+                </svg>
+                微信登录
+              </button>
+            </div>
 
             {/* 注册链接 */}
             <p className="text-sm text-center text-gray-500 mt-6">

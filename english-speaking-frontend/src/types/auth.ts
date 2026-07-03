@@ -19,6 +19,10 @@ export interface User {
   goal?: GoalType | null
   /** 英语等级，如 beginner / intermediate / advanced / A1 / B2 */
   level?: string | null
+  /** CEFR 等级 */
+  cefrLevel?: string | null
+  /** 角色：LEARNER / TEACHER / OPERATOR / ADMIN */
+  role?: string | null
   createdAt?: string
 }
 

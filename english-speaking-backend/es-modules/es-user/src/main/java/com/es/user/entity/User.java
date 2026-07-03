@@ -36,8 +36,22 @@ public class User {
     /** V2.0 CEFR等级: A1 / A2 / B1 / B2 / C1 / C2 */
     private String cefrLevel;
 
-    /** 账号状态: active / locked / deleted */
+    /** 账号状态: active / locked / banned */
     private String status;
+
+    /** 用户角色: LEARNER / TEACHER / OPERATOR / ADMIN */
+    private String role;
+
+    private Integer phoneVerified;
+    private Integer emailVerified;
+    private String deactivationStatus;
+    private LocalDateTime deactivationRequestedAt;
+    private LocalDateTime deactivationReactivatedAt;
+
+    /** V3.0 微信 OpenID */
+    private String wechatOpenid;
+    /** V3.0 微信 UnionID */
+    private String wechatUnionid;
 
     private LocalDateTime lastLoginAt;
 

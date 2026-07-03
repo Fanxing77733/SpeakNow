@@ -3,12 +3,16 @@ package com.es;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 英语口语训练系统 - 主启动类
  */
 @SpringBootApplication
 @MapperScan("com.es.**.mapper")
+@EnableAsync
+@EnableScheduling
 public class EsServerApplication {
 
     public static void main(String[] args) {

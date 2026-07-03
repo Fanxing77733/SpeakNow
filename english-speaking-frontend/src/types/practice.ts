@@ -32,7 +32,19 @@ export interface PronounceEvalResult {
   accuracyScore: number
   fluencyScore: number
   completenessScore: number
+  /** 重音准确度（V2.0） */
+  stressScore?: number
+  /** 语调自然度（V2.0） */
+  intonationScore?: number
   wordResults: WordResult[]
+}
+
+/** 五维评分维度定义 */
+export interface ScoreDimension {
+  key: string
+  label: string
+  score: number
+  color: string
 }
 
 /** 难度等级 */
