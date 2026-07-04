@@ -431,7 +431,7 @@ const PracticeResultPage = () => {
     return null
   }
 
-  const { asrText, totalScore, accuracyScore, fluencyScore, completenessScore, stressScore, intonationScore, wordResults } = result
+  const { asrText, totalScore, accuracyScore, fluencyScore, completenessScore, stressScore, intonationScore, wordResults, comment, levelLabel, strengths, weaknesses } = result
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -507,6 +507,59 @@ const PracticeResultPage = () => {
             )}
           </div>
         </div>
+
+        {/* AI 综合评语 */}
+        {comment && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-semibold text-gray-700">AI 综合评语</span>
+              {levelLabel && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-teal-400 to-emerald-400 text-white">
+                  {levelLabel}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">{comment}</p>
+          </div>
+        )}
+
+        {/* 优点 & 待改进 */}
+        {(strengths || weaknesses) && (
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            {strengths && strengths.length > 0 && (
+              <div className="bg-green-50 rounded-xl border border-green-200 p-5">
+                <h4 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                  做得好的地方
+                </h4>
+                <ul className="space-y-2">
+                  {strengths.map((s, i) => (
+                    <li key={i} className="text-sm text-green-800 flex items-start gap-2">
+                      <span className="text-green-400 mt-0.5">&#9679;</span>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {weaknesses && weaknesses.length > 0 && (
+              <div className="bg-amber-50 rounded-xl border border-amber-200 p-5">
+                <h4 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  可以改进的地方
+                </h4>
+                <ul className="space-y-2">
+                  {weaknesses.map((w, i) => (
+                    <li key={i} className="text-sm text-amber-800 flex items-start gap-2">
+                      <span className="text-amber-400 mt-0.5">&#9679;</span>
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ============================================================ */}

@@ -1,18 +1,10 @@
 /**
- * 骨架屏组件
- *
- * 用于加载态占位，避免页面跳动。
- * 支持多种预设形状：文字行、圆形头像、矩形卡片等。
+ * 骨架屏组件 — Claymorphism 风格
  */
-
 interface SkeletonProps {
-  /** 骨架屏形状 */
   variant?: 'text' | 'circular' | 'rectangular'
-  /** 宽度 */
   width?: string | number
-  /** 高度 */
   height?: string | number
-  /** 额外样式类 */
   className?: string
 }
 
@@ -22,12 +14,13 @@ const Skeleton = ({
   height,
   className = '',
 }: SkeletonProps) => {
-  const baseStyle = 'animate-pulse bg-gray-200 rounded'
+  const baseStyle = 'animate-pulse'
+  const colorStyle = 'bg-teal-100/60'
 
   const variantStyles: Record<string, string> = {
-    text: 'h-4 rounded',
+    text: 'h-4 rounded-lg',
     circular: 'rounded-full',
-    rectangular: 'rounded-lg',
+    rectangular: 'rounded-2xl',
   }
 
   const style: React.CSSProperties = {
@@ -37,7 +30,7 @@ const Skeleton = ({
 
   return (
     <div
-      className={`${baseStyle} ${variantStyles[variant]} ${className}`}
+      className={`${baseStyle} ${colorStyle} ${variantStyles[variant]} ${className}`}
       style={style}
       aria-hidden="true"
     />

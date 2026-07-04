@@ -3,11 +3,13 @@ package com.es.aigw.adapter.impl;
 import com.es.aigw.adapter.LlmAdapter;
 import com.es.aigw.dto.ChatMessage;
 import com.es.aigw.dto.DialogueScoreResult;
+import com.es.aigw.dto.GrammarErrorItem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -69,20 +71,136 @@ public class MockLlmAdapter implements LlmAdapter {
         int grammar = 70 + random.nextInt(21);    // 70-90
         int relevance = 65 + random.nextInt(26);   // 65-90
         int fluency = 70 + random.nextInt(26);     // 70-95
-        int total = (grammar + relevance + fluency) / 3;
+        int vocabulary = 65 + random.nextInt(26);   // 65-90
+        int pronunciation = 65 + random.nextInt(26); // 65-90
+        int interaction = 60 + random.nextInt(31);   // 60-90
+        int total = (grammar + relevance + fluency + vocabulary + pronunciation + interaction) / 6;
 
         DialogueScoreResult result = new DialogueScoreResult();
         result.setGrammarScore(new BigDecimal(grammar));
         result.setRelevanceScore(new BigDecimal(relevance));
         result.setFluencyScore(new BigDecimal(fluency));
         result.setTotalScore(new BigDecimal(total));
-        result.setComment("Good job! Your grammar is solid, and you stayed on topic well. "
-                + "Try to speak more fluently by practicing common phrases and reducing pauses. "
-                + "Keep practicing and you will see great improvement!");
+        result.setVocabularyScore(new BigDecimal(vocabulary));
+        result.setPronunciationScore(new BigDecimal(pronunciation));
+        result.setInteractionScore(new BigDecimal(interaction));
+        result.setLevelLabel(getDialogLevelLabel(total));
+        result.setComment(generateDialogComment(total, grammar, fluency));
+        result.setStrengths(generateDialogStrengths(grammar, relevance, fluency, vocabulary, pronunciation, interaction));
+        result.setWeaknesses(generateDialogWeaknesses(grammar, relevance, fluency, vocabulary, pronunciation, interaction));
+        result.setGrammarErrors(generateMockGrammarErrors(grammar));
+        result.setSuggestedExpressions(generateMockExpressions(total));
 
-        log.info("Mock LLM scoreDialogue 完成: grammar={}, relevance={}, fluency={}, total={}",
-                grammar, relevance, fluency, total);
+        log.info("Mock LLM scoreDialogue 完成: grammar={}, relevance={}, fluency={}, vocab={}, pron={}, interact={}, total={}",
+                grammar, relevance, fluency, vocabulary, pronunciation, interaction, total);
         return result;
+    }
+
+    // ======================== 对话评分 Mock 数据生成 ========================
+
+    private String getDialogLevelLabel(int total) {
+        if (total >= 90) return "对话大师";
+        if (total >= 80) return "沟通达人";
+        if (total >= 70) return "对话进阶者";
+        if (total >= 60) return "对话学习者";
+        return "对话新星";
+    }
+
+    private String generateDialogComment(int total, int grammar, int fluency) {
+        if (total >= 90) {
+            return "非常出色！你的英语对话能力很强，语法准确、表达流畅、用词丰富。"
+                + "对话中展现了良好的互动能力，能够自然地推进话题。继续保持这个水平！";
+        } else if (total >= 80) {
+            return "表现不错！你能够自信地进行英语对话，整体沟通顺畅。"
+                + "建议在词汇多样性上再多积累，同时注意个别语法细节（如时态一致性），让表达更精准。";
+        } else if (total >= 70) {
+            return "有进步空间！已能完成基本的英语对话，但在流利度和词汇量上还可以提升。"
+                + "建议多练习常用句型，积累地道的表达方式，同时注意回答的完整性和相关性。";
+        } else if (total >= 60) {
+            return "继续加油！你正在建立英语对话的基础。建议从简单短句开始，"
+                + "多听多模仿地道的对话，逐步扩大词汇量，提升回答的流畅度。";
+        } else {
+            return "别灰心！开口说英语本身就是很大的进步。建议从最基本的日常对话开始，"
+                + "学习常用短语和句型，每次专注练习 1-2 个话题，慢慢积累信心。";
+        }
+    }
+
+    private List<String> generateDialogStrengths(int grammar, int relevance, int fluency, int vocab, int pron, int interact) {
+        List<String> strengths = new ArrayList<>();
+        int[] scores = {grammar, relevance, fluency, vocab, pron, interact};
+        String[] labels = {"语法结构准确", "回答切题相关", "表达流畅自然", "词汇丰富多样", "发音清晰准确", "互动积极自然"};
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] >= 80) {
+                strengths.add(labels[i] + "（" + scores[i] + "分）");
+            }
+        }
+        if (strengths.isEmpty()) {
+            strengths.add("敢于开口对话的勇气值得肯定");
+        }
+        return strengths;
+    }
+
+    private List<String> generateDialogWeaknesses(int grammar, int relevance, int fluency, int vocab, int pron, int interact) {
+        List<String> weaknesses = new ArrayList<>();
+        int[] scores = {grammar, relevance, fluency, vocab, pron, interact};
+        String[] labels = {"语法准确度", "内容相关性", "表达流利度", "词汇丰富度", "发音清晰度", "互动自然度"};
+        String[] tips = {
+            "注意时态一致性和主谓一致，回答前稍作思考再开口",
+            "回答问题时要紧扣话题，避免跑题或过于简略",
+            "多练习常用句型，减少犹豫停顿，提高表达连贯性",
+            "建议每次对话后记录新学词汇，逐步扩大词汇量",
+            "多注意元音发音和单词重音，模仿原声语调",
+            "尝试主动追问和延伸话题，不要只被动回答问题"
+        };
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] < 80) {
+                weaknesses.add(labels[i] + "（" + scores[i] + "分），" + tips[i]);
+            }
+        }
+        if (weaknesses.isEmpty()) {
+            weaknesses.add("可以尝试更复杂的话题和更长的对话轮次");
+        }
+        return weaknesses;
+    }
+
+    private List<GrammarErrorItem> generateMockGrammarErrors(int grammarScore) {
+        if (grammarScore >= 85) return List.of();
+        List<GrammarErrorItem> errors = new ArrayList<>();
+        if (grammarScore < 85) {
+            errors.add(new GrammarErrorItem("I go to school yesterday", "I went to school yesterday",
+                "一般过去时应使用过去式 went，而不是原形 go"));
+        }
+        if (grammarScore < 75) {
+            errors.add(new GrammarErrorItem("He don't like it", "He doesn't like it",
+                "第三人称单数应使用 doesn't，而不是 don't"));
+        }
+        if (grammarScore < 65) {
+            errors.add(new GrammarErrorItem("I have eat breakfast", "I have eaten breakfast",
+                "现在完成时应使用过去分词 eaten，而不是原形 eat"));
+        }
+        return errors;
+    }
+
+    private List<String> generateMockExpressions(int total) {
+        if (total >= 85) {
+            return List.of(
+                "I couldn't agree more — 表示非常赞同",
+                "That's a good point, and I'd add that... — 补充观点",
+                "It's worth mentioning that... — 引出值得注意的点"
+            );
+        } else if (total >= 70) {
+            return List.of(
+                "In my opinion, ... — 表达个人观点",
+                "Could you tell me more about...? — 追问细节",
+                "That sounds interesting! — 回应对方"
+            );
+        } else {
+            return List.of(
+                "I think... / I feel... — 表达想法",
+                "Could you repeat that? — 请求重复",
+                "What does ... mean? — 询问含义"
+            );
+        }
     }
 
     // ======================== 私有方法 ========================

@@ -10,14 +10,17 @@ import com.es.common.event.PointsEvent;
 import com.es.common.event.PortraitEvent;
 import com.es.common.exception.BusinessException;
 import com.es.practice.dto.ConversationResultVO;
+import com.es.practice.dto.GrammarErrorVO;
 import com.es.practice.dto.MessageVO;
 import com.es.practice.dto.SendMessageResultVO;
 import com.es.practice.dto.ScoreResultVO;
 import com.es.practice.dto.StartSessionDTO;
 import com.es.practice.entity.ConversationMessage;
 import com.es.practice.entity.ConversationSession;
+import com.es.practice.entity.RoleplayScene;
 import com.es.practice.mapper.ConversationMessageMapper;
 import com.es.practice.mapper.ConversationSessionMapper;
+import com.es.practice.mapper.RoleplaySceneMapper;
 import com.es.practice.service.ConversationService;
 import com.es.practice.service.ScenePromptService;
 import com.es.practice.util.InputFilter;
@@ -42,6 +45,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     private final ConversationSessionMapper sessionMapper;
     private final ConversationMessageMapper messageMapper;
+    private final RoleplaySceneMapper roleplaySceneMapper;
     private final ScenePromptService scenePromptService;
     private final LlmAdapter llmAdapter;
     private final AsrAdapter asrAdapter;
@@ -51,6 +55,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     public ConversationServiceImpl(ConversationSessionMapper sessionMapper,
                                    ConversationMessageMapper messageMapper,
+                                   RoleplaySceneMapper roleplaySceneMapper,
                                    ScenePromptService scenePromptService,
                                    LlmAdapter llmAdapter,
                                    AsrAdapter asrAdapter,
@@ -59,6 +64,7 @@ public class ConversationServiceImpl implements ConversationService {
                                    ApplicationEventPublisher eventPublisher) {
         this.sessionMapper = sessionMapper;
         this.messageMapper = messageMapper;
+        this.roleplaySceneMapper = roleplaySceneMapper;
         this.scenePromptService = scenePromptService;
         this.llmAdapter = llmAdapter;
         this.asrAdapter = asrAdapter;
@@ -79,9 +85,20 @@ public class ConversationServiceImpl implements ConversationService {
         // 2. 自动关闭用户之前的 active 会话（避免 409 阻塞）
         closeActiveSessions(userId);
 
-        // 3. 加载场景 Prompt 模板
-        String systemPrompt = scenePromptService.loadScenePrompt(scene);
-        log.info("开始情景对话: userId={}, scene={}, difficulty={}", userId, scene, dto.getDifficulty());
+        // 3. 加载场景 Prompt + 角色扮演元数据
+        String systemPrompt;
+        RoleplayScene rpScene = null;
+        if (dto.getRoleplaySceneId() != null) {
+            rpScene = roleplaySceneMapper.selectById(dto.getRoleplaySceneId());
+            if (rpScene == null) {
+                throw new BusinessException(404, "角色扮演场景不存在");
+            }
+            systemPrompt = rpScene.getSystemPrompt();
+            log.info("开始角色扮演: userId={}, roleplaySceneId={}, scene={}", userId, dto.getRoleplaySceneId(), scene);
+        } else {
+            systemPrompt = scenePromptService.loadScenePrompt(scene);
+            log.info("开始情景对话: userId={}, scene={}, difficulty={}", userId, scene, dto.getDifficulty());
+        }
 
         // 4. 创建 conversation_sessions 记录
         ConversationSession session = new ConversationSession();
@@ -92,6 +109,12 @@ public class ConversationServiceImpl implements ConversationService {
         session.setTotalRounds(0);
         session.setTotalDurationSeconds(0);
         session.setCreatedAt(LocalDateTime.now());
+
+        if (rpScene != null) {
+            session.setRoleplaySceneId(rpScene.getId());
+            session.setPassScore(rpScene.getPassScore());
+        }
+
         sessionMapper.insert(session);
         log.info("对话会话已创建: sessionId={}, userId={}, scene={}", session.getId(), userId, scene);
 
@@ -121,6 +144,13 @@ public class ConversationServiceImpl implements ConversationService {
         result.setScene(scene);
         result.setStatus("active");
         result.setTotalRounds(1);
+
+        if (rpScene != null) {
+            result.setRoleplaySceneId(rpScene.getId());
+            result.setUserRoleZh(rpScene.getUserRoleZh());
+            result.setAiRoleZh(rpScene.getAiRoleZh());
+            result.setObjectiveZh(rpScene.getObjectiveZh());
+        }
 
         MessageVO firstMessage = new MessageVO();
         firstMessage.setRound(1);
@@ -258,13 +288,19 @@ public class ConversationServiceImpl implements ConversationService {
             throw new BusinessException(503, "评分服务繁忙，请稍后重试");
         }
 
-        // 6. 更新 conversation_sessions（评分字段 + status=completed）
+        // 6. 更新 conversation_sessions（评分字段 + status=completed + 通过判定）
         session.setStatus("completed");
         session.setTotalRounds(successfulRounds);
         session.setGrammarScore(scoreResult.getGrammarScore());
         session.setRelevanceScore(scoreResult.getRelevanceScore());
         session.setFluencyScore(scoreResult.getFluencyScore());
         session.setTotalScore(scoreResult.getTotalScore());
+
+        // 计算是否通过
+        if (session.getPassScore() != null && scoreResult.getTotalScore() != null) {
+            session.setIsPassed(scoreResult.getTotalScore().compareTo(session.getPassScore()) >= 0 ? 1 : 0);
+        }
+
         sessionMapper.updateById(session);
 
         log.info("对话评分完成: sessionId={}, totalRounds={}, grammar={}, relevance={}, fluency={}, total={}",
@@ -298,7 +334,21 @@ public class ConversationServiceImpl implements ConversationService {
         vo.setRelevanceScore(scoreResult.getRelevanceScore());
         vo.setFluencyScore(scoreResult.getFluencyScore());
         vo.setTotalScore(scoreResult.getTotalScore());
+        vo.setPassScore(session.getPassScore());
+        vo.setIsPassed(session.getIsPassed() != null && session.getIsPassed() == 1);
         vo.setComment(scoreResult.getComment());
+        vo.setVocabularyScore(scoreResult.getVocabularyScore());
+        vo.setPronunciationScore(scoreResult.getPronunciationScore());
+        vo.setInteractionScore(scoreResult.getInteractionScore());
+        vo.setLevelLabel(scoreResult.getLevelLabel());
+        vo.setStrengths(scoreResult.getStrengths());
+        vo.setWeaknesses(scoreResult.getWeaknesses());
+        vo.setSuggestedExpressions(scoreResult.getSuggestedExpressions());
+        if (scoreResult.getGrammarErrors() != null) {
+            vo.setGrammarErrors(scoreResult.getGrammarErrors().stream()
+                .map(e -> new GrammarErrorVO(e.getError(), e.getCorrection(), e.getExplanation()))
+                .collect(Collectors.toList()));
+        }
         return vo;
     }
 
@@ -324,10 +374,27 @@ public class ConversationServiceImpl implements ConversationService {
                 .orderByAsc(ConversationMessage::getCreatedAt);
         List<ConversationMessage> messageEntities = messageMapper.selectList(msgWrapper);
 
-        // 3. 构建 VO
+        // 3. 角色扮演元数据
+        String userRoleZh = null;
+        String aiRoleZh = null;
+        String objectiveZh = null;
+        if (session.getRoleplaySceneId() != null) {
+            RoleplayScene rpScene = roleplaySceneMapper.selectById(session.getRoleplaySceneId());
+            if (rpScene != null) {
+                userRoleZh = rpScene.getUserRoleZh();
+                aiRoleZh = rpScene.getAiRoleZh();
+                objectiveZh = rpScene.getObjectiveZh();
+            }
+        }
+
+        // 4. 构建 VO
         ConversationResultVO result = new ConversationResultVO();
         result.setSessionId(session.getId());
         result.setScene(session.getScene());
+        result.setRoleplaySceneId(session.getRoleplaySceneId());
+        result.setUserRoleZh(userRoleZh);
+        result.setAiRoleZh(aiRoleZh);
+        result.setObjectiveZh(objectiveZh);
         result.setStatus(session.getStatus());
         result.setTotalRounds(session.getTotalRounds());
 

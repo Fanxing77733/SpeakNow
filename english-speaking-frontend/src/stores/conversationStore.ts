@@ -35,6 +35,12 @@ interface ConversationState {
   totalRounds: number
   currentRound: number
 
+  // ---------- 角色扮演元数据 ----------
+  roleplaySceneId: number | null
+  userRoleZh: string | null
+  aiRoleZh: string | null
+  objectiveZh: string | null
+
   // ---------- 消息列表 ----------
   messages: Message[]
 
@@ -52,6 +58,8 @@ interface ConversationState {
   // ---------- 动作 ----------
   /** 初始化会话（调用 startSession API） */
   initSession: (scene: Scene, difficulty: ConversationDifficulty) => Promise<void>
+  /** 初始化角色扮演会话 */
+  initRoleplaySession: (scene: Scene, difficulty: ConversationDifficulty, roleplaySceneId: number) => Promise<void>
   /** 获取当前 active 会话用于恢复（静默，无会话时返回 null） */
   fetchActiveSession: () => Promise<ConversationSession | null>
   /** 发送语音消息 */
@@ -111,6 +119,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   difficulty: null,
   totalRounds: 5,
   currentRound: 0,
+  roleplaySceneId: null,
+  userRoleZh: null,
+  aiRoleZh: null,
+  objectiveZh: null,
   messages: [],
   status: 'idle',
   recordingState: 'idle',
@@ -124,6 +136,24 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     set({ isLoading: true, error: null, scene, difficulty })
     try {
       const session: ConversationSession = await conversationApi.startSession(scene, difficulty)
+      set({
+        sessionId: session.sessionId,
+        currentRound: 1,
+        messages: [session.firstMessage],
+        status: 'active',
+        isLoading: false,
+      })
+    } catch (error: unknown) {
+      const message = extractErrorMessage(error)
+      set({ error: message, isLoading: false, status: 'error' })
+      throw new Error(message)
+    }
+  },
+
+  initRoleplaySession: async (scene: Scene, difficulty: ConversationDifficulty, roleplaySceneId: number) => {
+    set({ isLoading: true, error: null, scene, difficulty, roleplaySceneId })
+    try {
+      const session: ConversationSession = await conversationApi.startSession(scene, difficulty, roleplaySceneId)
       set({
         sessionId: session.sessionId,
         currentRound: 1,
@@ -227,6 +257,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       difficulty: null,
       totalRounds: 5,
       currentRound: 0,
+      roleplaySceneId: null,
+      userRoleZh: null,
+      aiRoleZh: null,
+      objectiveZh: null,
       messages: [],
       status: 'idle',
       recordingState: 'idle',

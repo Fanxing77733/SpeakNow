@@ -101,7 +101,7 @@ export default function SpeechPage() {
     }
     setStep('evaluating')
     try {
-      const evalResult = await submitSpeech(sessionId, blob, duration)
+      const evalResult = await submitSpeech(sessionId, blob, Math.round(duration))
       setResult(evalResult)
       setStep('result')
     } catch (e: any) {

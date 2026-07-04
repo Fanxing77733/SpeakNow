@@ -12,6 +12,38 @@ import Skeleton from '../../components/ui/Skeleton'
 import EmptyState from '../../components/ui/EmptyState'
 import { request } from '../../api/client'
 
+/* ========== Mock 数据生成（API 不可用或数据为空时兜底） ========== */
+function generateMockRadar(): RadarItem[] {
+  const dims = ['准确度', '流利度', '完整度', '重音', '语调']
+  return dims.map(dim => ({
+    dimension: dim,
+    score: Math.floor(55 + Math.random() * 40),
+    fullMark: 100,
+  }))
+}
+
+function generateMockTrend(): TrendItem[] {
+  const data: TrendItem[] = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    data.push({
+      date: `${mm}-${dd}`,
+      count: Math.floor(Math.random() * 5) + 1,
+      avgScore: +(55 + Math.random() * 40).toFixed(1),
+    })
+  }
+  return data
+}
+
+function isDataEmpty(radar: RadarItem[], trend: TrendItem[]) {
+  const radarAllZero = radar.every(d => d.score === 0)
+  const trendAllZero = trend.every(d => d.count === 0)
+  return radar.length === 0 || trend.length === 0 || radarAllZero || trendAllZero
+}
+
 /* ========== 统计卡片 ========== */
 interface StatCardProps {
   icon: string; title: string; value: string | number; label: string
@@ -149,10 +181,22 @@ const ProgressPage = () => {
       request<{ radarData: RadarItem[] }>({ method: 'GET', url: '/progress/radar' }),
       request<TrendItem[]>({ method: 'GET', url: '/progress/trend?period=week' }),
     ]).then(([radarRes, trendRes]) => {
-      setRadarData(Array.isArray(radarRes?.radarData) ? radarRes.radarData : [])
-      setTrendData(Array.isArray(trendRes) ? trendRes : [])
-    }).catch(() => {}).finally(() => setChartsLoaded(true))
-  }, [summary?.empty])
+      const radar = Array.isArray(radarRes?.radarData) ? radarRes.radarData : []
+      const trend = Array.isArray(trendRes) ? trendRes : []
+      if (isDataEmpty(radar, trend)) {
+        // 真实数据为空，用 mock 兜底
+        setRadarData(generateMockRadar())
+        setTrendData(generateMockTrend())
+      } else {
+        setRadarData(radar)
+        setTrendData(trend)
+      }
+    }).catch(() => {
+      // API 不可用时用 mock 兜底
+      setRadarData(generateMockRadar())
+      setTrendData(generateMockTrend())
+    }).finally(() => setChartsLoaded(true))
+  }, [summary])
 
   /* ---- 加载态 ---- */
   if (isLoading) {

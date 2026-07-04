@@ -1,0 +1,21 @@
+-- V20: 安全中心 — 审计日志表 + users 表安全扩展字段
+CREATE TABLE audit_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    action VARCHAR(50) NOT NULL COMMENT '操作类型: CHANGE_PASSWORD/BIND_PHONE/UNBIND_PHONE/BIND_EMAIL/UNBIND_EMAIL/DEACTIVATE_ACCOUNT/REACTIVATE_ACCOUNT/KICK_SESSION',
+    target VARCHAR(255) COMMENT '操作目标',
+    ip VARCHAR(45) COMMENT '操作 IP',
+    user_agent VARCHAR(500) COMMENT 'UA',
+    result VARCHAR(20) NOT NULL DEFAULT 'SUCCESS' COMMENT 'SUCCESS/FAIL',
+    detail TEXT COMMENT '操作详情 JSON',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_user (user_id),
+    INDEX idx_audit_action (action),
+    INDEX idx_audit_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审计日志';
+
+ALTER TABLE users ADD COLUMN phone_verified TINYINT(1) NOT NULL DEFAULT 0 COMMENT '手机是否已验证';
+ALTER TABLE users ADD COLUMN email_verified TINYINT(1) NOT NULL DEFAULT 0 COMMENT '邮箱是否已验证';
+ALTER TABLE users ADD COLUMN deactivation_status VARCHAR(20) DEFAULT NULL COMMENT '注销状态: PENDING_DELETION';
+ALTER TABLE users ADD COLUMN deactivation_requested_at DATETIME DEFAULT NULL COMMENT '注销申请时间';
+ALTER TABLE users ADD COLUMN deactivation_reactivated_at DATETIME DEFAULT NULL COMMENT '撤销注销时间';

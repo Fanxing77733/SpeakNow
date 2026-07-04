@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -73,8 +74,79 @@ public class MockPronunciationEvalAdapter implements PronunciationEvalAdapter {
         result.setWordResults(wordResults);
         result.setAsrText(referenceText);
 
+        // 生成丰富的 Mock 评语和建议
+        int total = totalScore.intValue();
+        result.setLevelLabel(getLevelLabel(total));
+        result.setComment(generateComment(total, accuracy, fluency));
+        result.setStrengths(generateStrengths(accuracy, fluency, completeness, stress, intonation));
+        result.setWeaknesses(generateWeaknesses(accuracy, fluency, completeness, stress, intonation));
+
         log.info("Mock 发音评测完成: totalScore={}", totalScore);
         return result;
+    }
+
+    private String getLevelLabel(int totalScore) {
+        if (totalScore >= 90) return "发音大师";
+        if (totalScore >= 80) return "流利表达者";
+        if (totalScore >= 70) return "发音进阶者";
+        if (totalScore >= 60) return "发音学习者";
+        return "发音新星";
+    }
+
+    private String generateComment(int total, int accuracy, int fluency) {
+        if (total >= 90) {
+            return "非常出色！你的发音准确度很高，语调自然流畅，展现了优秀的英语口语能力。"
+                + "继续保持这个水平，你可以尝试更有挑战性的长句和复杂表达。";
+        } else if (total >= 80) {
+            return "表现不错！整体发音清晰准确，大部分单词都读得很好。"
+                + "建议多注意个别辅音的发音（如 th、v），以及句子重音的把握，会让你的口语更加地道。";
+        } else if (total >= 70) {
+            return "有进步空间！你的发音基本能让人听懂，但在准确度和流利度上还有提升空间。"
+                + "建议放慢语速，先把每个单词读清楚，再逐步提高连贯性。";
+        } else if (total >= 60) {
+            return "继续加油！你已经迈出了第一步。建议从简单句子开始，反复跟读模仿，"
+                + "重点关注元音发音和单词重音，打好基础后再提速。";
+        } else {
+            return "别灰心！学习语言需要时间和耐心。建议多听标准发音，从单个单词开始练习，"
+                + "逐步过渡到短语和短句，每天坚持 10 分钟就会看到进步。";
+        }
+    }
+
+    private List<String> generateStrengths(int accuracy, int fluency, int completeness, int stress, int intonation) {
+        List<String> strengths = new ArrayList<>();
+        int[] scores = {accuracy, fluency, completeness, stress, intonation};
+        String[] labels = {"发音准确度", "朗读流利度", "内容完整度", "重音准确度", "语调自然度"};
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] >= 80) {
+                strengths.add(labels[i] + "表现优秀（" + scores[i] + "分）");
+            }
+        }
+        if (strengths.isEmpty()) {
+            strengths.add("勇于开口说英语的积极性值得肯定");
+        }
+        return strengths;
+    }
+
+    private List<String> generateWeaknesses(int accuracy, int fluency, int completeness, int stress, int intonation) {
+        List<String> weaknesses = new ArrayList<>();
+        int[] scores = {accuracy, fluency, completeness, stress, intonation};
+        String[] labels = {"发音准确度", "朗读流利度", "内容完整度", "重音准确度", "语调自然度"};
+        String[] tips = {
+            "建议多听原声并逐词跟读模仿",
+            "建议先放慢语速，确保每个词读清楚后再加速",
+            "注意不要漏读或跳词，完整朗读整个句子",
+            "多注意单词的重音音节位置",
+            "注意陈述句降调、疑问句升调的基本规则"
+        };
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] < 80) {
+                weaknesses.add(labels[i] + "需加强（" + scores[i] + "分），" + tips[i]);
+            }
+        }
+        if (weaknesses.isEmpty()) {
+            weaknesses.add("可以尝试更复杂的句型和更快的语速来挑战自己");
+        }
+        return weaknesses;
     }
 
     /**

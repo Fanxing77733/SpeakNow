@@ -38,4 +38,16 @@ public class PronunciationEvalResult {
 
     /** ASR 识别出的文本 */
     private String asrText;
+
+    /** AI 综合评语 */
+    private String comment;
+
+    /** 等级标签（如 "发音新星"、"流利表达者"） */
+    private String levelLabel;
+
+    /** 优点列表 */
+    private List<String> strengths;
+
+    /** 待改进列表 */
+    private List<String> weaknesses;
 }

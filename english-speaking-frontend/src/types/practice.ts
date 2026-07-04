@@ -37,6 +37,14 @@ export interface PronounceEvalResult {
   /** 语调自然度（V2.0） */
   intonationScore?: number
   wordResults: WordResult[]
+  /** AI 综合评语 */
+  comment?: string
+  /** 等级标签 */
+  levelLabel?: string
+  /** 优点列表 */
+  strengths?: string[]
+  /** 待改进列表 */
+  weaknesses?: string[]
 }
 
 /** 五维评分维度定义 */

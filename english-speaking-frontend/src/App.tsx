@@ -35,6 +35,8 @@ import ConversationPage from './pages/conversation/ConversationPage'
 import ProgressPage from './pages/progress/ProgressPage'
 import GrammarPage from './pages/grammar/GrammarPage'
 import RolePlayPage from './pages/conversation/RolePlayPage'
+import RoleplayCenterPage from './pages/roleplay/RoleplayCenterPage'
+import RoleplayChatPage from './pages/roleplay/RoleplayChatPage'
 import AdaptiveAssessmentPage from './pages/assessment/AdaptiveAssessmentPage'
 import LearningPathPage from './pages/learning/LearningPathPage'
 import GamificationPage from './pages/gamification/GamificationPage'
@@ -65,10 +67,13 @@ import DashboardPage from './pages/admin/operator/DashboardPage'
 
 /** 404 页面 */
 const NotFoundPage = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-    <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
-    <p className="text-lg text-gray-500 mb-6">页面未找到</p>
-    <a href="/" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+  <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #F0FDFA 0%, #E8FAF6 50%, #F0FDFA 100%)' }}>
+    <div className="clay-card w-28 h-28 rounded-full flex items-center justify-center mb-6">
+      <span className="text-5xl font-extrabold text-teal-300" style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>404</span>
+    </div>
+    <p className="text-lg font-semibold text-teal-700 mb-2" style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>页面未找到</p>
+    <p className="text-sm text-teal-500/50 mb-8">你访问的页面不存在或已被移除</p>
+    <a href="/" className="clay-btn px-6 py-2.5 text-sm inline-block">
       返回首页
     </a>
   </div>
@@ -97,7 +102,9 @@ function App() {
             <Route path="conversation/chat" element={<ConversationPage />} />
             <Route path="progress" element={<ProgressPage />} />
             <Route path="grammar" element={<GrammarPage />} />
-            <Route path="roleplay" element={<RolePlayPage />} />
+            <Route path="roleplay" element={<RoleplayCenterPage />} />
+            <Route path="roleplay/chat" element={<RoleplayChatPage />} />
+            <Route path="roleplay-old" element={<RolePlayPage />} />
             <Route path="adaptive" element={<AdaptiveAssessmentPage />} />
             <Route path="learning" element={<LearningPathPage />} />
             <Route path="gamification" element={<GamificationPage />} />

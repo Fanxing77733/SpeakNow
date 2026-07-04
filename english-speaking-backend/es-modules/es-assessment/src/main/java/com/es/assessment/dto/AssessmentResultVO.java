@@ -3,7 +3,7 @@ package com.es.assessment.dto;
 import lombok.Data;
 
 /**
- * 测评结果响应体
+ * 测评结果响应体（V3.0：CEFR 六级 + 四维得分）
  */
 @Data
 public class AssessmentResultVO {
@@ -26,9 +26,18 @@ public class AssessmentResultVO {
     /** 听力得分 0-100 */
     private Integer listeningScore;
 
-    /** 测评结果等级: beginner / intermediate / advanced */
-    private String resultLevel;
+    /** CEFR 等级: A1 / A2 / B1 / B2 / C1 / C2 */
+    private String cefrLevel;
 
-    /** 评语 */
+    /** 等级中文标签 */
+    private String levelLabel;
+
+    /** 评语/学习建议 */
     private String message;
+
+    /** 正确题数 */
+    private Integer correctCount;
+
+    /** 总题数 */
+    private Integer totalQuestions;
 }

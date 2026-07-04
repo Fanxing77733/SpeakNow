@@ -66,6 +66,8 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**", "/doc.html", "/webjars/**").permitAll()
                 // 健康检查放行
                 .requestMatchers("/actuator/health").permitAll()
+                // 角色扮演场景列表公开
+                .requestMatchers("/api/v1/roleplay/scenes").permitAll()
                 // FAQ 公开接口放行
                 .requestMatchers("/api/v1/support/faq/**").permitAll()
                 // 微信 OAuth 回调放行

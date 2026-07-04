@@ -17,6 +17,9 @@ public class QuestionVO {
     /** 题目文本 */
     private String questionText;
 
+    /** 听力原文（用于前端 TTS 语音合成，非听力题为 null） */
+    private String transcript;
+
     /** 选项列表 JSON: [{"key":"A","text":"..."},...] */
     private String optionsJson;
 

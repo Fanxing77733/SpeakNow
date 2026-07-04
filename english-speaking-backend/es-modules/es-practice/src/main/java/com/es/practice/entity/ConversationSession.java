@@ -21,8 +21,11 @@ public class ConversationSession {
     /** 用户 ID */
     private Long userId;
 
-    /** 对话场景（restaurant/hotel/airport/shopping/hospital/interview/casual/meeting） */
+    /** 对话场景 */
     private String scene;
+
+    /** 关联的角色扮演场景ID（NULL=旧版自由对话） */
+    private Long roleplaySceneId;
 
     /** 难度等级: beginner / intermediate / advanced */
     private String difficulty;
@@ -44,6 +47,12 @@ public class ConversationSession {
 
     /** 综合评分 */
     private BigDecimal totalScore;
+
+    /** 本场通过分数阈值 */
+    private BigDecimal passScore;
+
+    /** 是否通过（total_score >= pass_score） */
+    private Integer isPassed;
 
     /** 总录音时长（秒） */
     private Integer totalDurationSeconds;

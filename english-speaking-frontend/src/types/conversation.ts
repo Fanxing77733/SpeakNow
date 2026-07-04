@@ -159,6 +159,13 @@ export interface AIMessageResponse {
   totalRounds: number
 }
 
+/** 语法错误条目 */
+export interface GrammarError {
+  error: string
+  correction: string
+  explanation: string
+}
+
 /** 对话评分结果 */
 export interface ScoreResult {
   sessionId: number
@@ -166,5 +173,80 @@ export interface ScoreResult {
   relevanceScore: number
   fluencyScore: number
   totalScore: number
+  passScore?: number
+  isPassed?: boolean
   comment: string
+  /** 词汇丰富度 */
+  vocabularyScore?: number
+  /** 发音评分 */
+  pronunciationScore?: number
+  /** 互动自然度 */
+  interactionScore?: number
+  /** 等级标签 */
+  levelLabel?: string
+  /** 优点列表 */
+  strengths?: string[]
+  /** 待改进列表 */
+  weaknesses?: string[]
+  /** 语法错误详情 */
+  grammarErrors?: GrammarError[]
+  /** 推荐地道表达 */
+  suggestedExpressions?: string[]
+}
+
+/** 角色扮演场景 */
+export interface RoleplayScene {
+  id: number
+  sceneKey: string
+  nameZh: string
+  nameEn?: string
+  descriptionZh: string
+  difficulty: 'easy' | 'normal' | 'hard'
+  difficultyLabel: string
+  userRoleZh: string
+  aiRoleZh: string
+  aiPersonality: string
+  objectiveZh: string
+  totalRounds: number
+  passScore: number
+  iconEmoji: string
+  category: string
+}
+
+/** 角色扮演历史记录项 */
+export interface RoleplayHistoryItem {
+  sessionId: number
+  sceneKey: string
+  sceneNameZh: string
+  difficulty: string
+  totalScore: number
+  passScore: number
+  isPassed: boolean
+  totalRounds: number
+  completedRounds: number
+  grammarScore: number
+  relevanceScore: number
+  fluencyScore: number
+  comment: string
+  durationSeconds: number
+  createdAt: string
+}
+
+/** 角色扮演历史记录分页 */
+export interface RoleplayHistoryPage {
+  total: number
+  pages: number
+  current: number
+  records: RoleplayHistoryItem[]
+}
+
+/** 难度过滤 */
+export type DifficultyFilter = 'all' | 'easy' | 'normal' | 'hard'
+
+/** 难度标签映射 */
+export const DIFFICULTY_FILTER_LABELS: Record<DifficultyFilter, string> = {
+  all: '全部',
+  easy: 'Easy',
+  normal: 'Normal',
+  hard: 'Hard',
 }

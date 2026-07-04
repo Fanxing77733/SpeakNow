@@ -1,0 +1,5 @@
+-- V19: 用户表增加角色字段，支持 RBAC 权限控制
+ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'LEARNER'
+  COMMENT '用户角色: LEARNER/TEACHER/OPERATOR/ADMIN';
+
+CREATE INDEX idx_users_role ON users(role);

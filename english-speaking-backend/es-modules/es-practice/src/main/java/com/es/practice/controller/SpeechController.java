@@ -57,8 +57,16 @@ public class SpeechController {
     public Result<SpeechEvalResultVO> submitSpeech(
             @PathVariable Long sessionId,
             @RequestParam("audio") MultipartFile audio,
-            @RequestParam(defaultValue = "0") int durationSeconds) {
+            @RequestParam(defaultValue = "0") String durationSecondsStr) {
         Long userId = getCurrentUserId();
+
+        // 前端可能传入浮点数字符串（如 "45.7"），解析为整数秒
+        int durationSeconds;
+        try {
+            durationSeconds = (int) Math.round(Double.parseDouble(durationSecondsStr));
+        } catch (NumberFormatException e) {
+            throw new BusinessException(400, "录音时长格式错误，请重试");
+        }
 
         if (audio.isEmpty()) {
             throw new BusinessException(400, "未检测到有效语音，请重新朗读");

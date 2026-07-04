@@ -16,6 +16,18 @@ public class ConversationResultVO {
     /** 对话场景 */
     private String scene;
 
+    /** 角色扮演场景ID */
+    private Long roleplaySceneId;
+
+    /** 用户扮演角色 */
+    private String userRoleZh;
+
+    /** AI 扮演角色 */
+    private String aiRoleZh;
+
+    /** 通关目标 */
+    private String objectiveZh;
+
     /** 会话状态 */
     private String status;
 

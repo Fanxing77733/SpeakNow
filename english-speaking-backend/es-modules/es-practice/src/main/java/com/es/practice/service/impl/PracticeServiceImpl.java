@@ -290,6 +290,10 @@ public class PracticeServiceImpl implements PracticeService {
         vo.setCompletenessScore(evalResult.getCompletenessScore());
         vo.setStressScore(evalResult.getStressScore());
         vo.setIntonationScore(evalResult.getIntonationScore());
+        vo.setComment(evalResult.getComment());
+        vo.setLevelLabel(evalResult.getLevelLabel());
+        vo.setStrengths(evalResult.getStrengths());
+        vo.setWeaknesses(evalResult.getWeaknesses());
 
         // 转换逐词结果，计算 color 字段
         if (evalResult.getWordResults() != null) {

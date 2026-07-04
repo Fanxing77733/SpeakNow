@@ -18,18 +18,20 @@ import type {
 /**
  * 开始对话会话
  *
- * @param scene      对话场景
- * @param difficulty 对话难度
+ * @param scene            对话场景
+ * @param difficulty       对话难度
+ * @param roleplaySceneId  角色扮演场景ID（可选）
  * @returns 会话信息 + AI 第一轮消息
  */
 export async function startSession(
   scene: Scene,
   difficulty: ConversationDifficulty,
+  roleplaySceneId?: number,
 ): Promise<ConversationSession> {
   return request({
     method: 'POST',
     url: '/chat/session/start',
-    data: { scene, difficulty },
+    data: { scene, difficulty, roleplaySceneId },
   })
 }
 
