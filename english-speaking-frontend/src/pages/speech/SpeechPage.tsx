@@ -104,8 +104,18 @@ export default function SpeechPage() {
       const evalResult = await submitSpeech(sessionId, blob, duration)
       setResult(evalResult)
       setStep('result')
-    } catch {
-      setToast('评估服务繁忙，请稍后重试')
+    } catch (e: any) {
+      const status = e?.response?.status
+      const serverMsg = e?.response?.data?.message
+      if (status === 400 && serverMsg) {
+        setToast(serverMsg)
+      } else if (status === 404) {
+        setToast('会话已过期，请重新选择话题')
+      } else if (!e?.response) {
+        setToast('网络连接失败，请检查网络后重试')
+      } else {
+        setToast(serverMsg || '评估服务繁忙，请稍后重试')
+      }
       setStep('select')
     }
   }

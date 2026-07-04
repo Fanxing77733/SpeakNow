@@ -9,9 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.annotation.PostConstruct;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,14 +35,28 @@ public class RealLlmAdapter implements LlmAdapter {
     @Value("${aigw.llm.base-url:https://api.deepseek.com/v1}")
     private String baseUrl;
 
+    @Value("${aigw.connect-timeout:5000}")
+    private int connectTimeout;
+
+    @Value("${aigw.read-timeout:30000}")
+    private int readTimeout;
+
     /** DeepSeek 模型名称 */
     private static final String MODEL = "deepseek-chat";
 
     /** 对话评分温度（低温度确保评分稳定） */
     private static final double SCORING_TEMPERATURE = 0.2;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @PostConstruct
+    public void init() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(connectTimeout);
+        factory.setReadTimeout(readTimeout);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     @Override
     public String chat(String systemPrompt, List<ChatMessage> messages, double temperature) {

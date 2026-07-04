@@ -7,9 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.annotation.PostConstruct;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -38,6 +41,12 @@ public class RealAsrAdapter implements AsrAdapter {
     @Value("${aigw.asr.secret-key}")
     private String secretKey;
 
+    @Value("${aigw.connect-timeout:5000}")
+    private int connectTimeout;
+
+    @Value("${aigw.read-timeout:30000}")
+    private int readTimeout;
+
     /** 腾讯云 ASR 服务端点 */
     private static final String ENDPOINT = "asr.tencentcloudapi.com";
 
@@ -53,8 +62,16 @@ public class RealAsrAdapter implements AsrAdapter {
     /** 签名算法 */
     private static final String ALGORITHM = "TC3-HMAC-SHA256";
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @PostConstruct
+    public void init() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(connectTimeout);
+        factory.setReadTimeout(readTimeout);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     @Override
     public String recognize(byte[] audioBytes) {
