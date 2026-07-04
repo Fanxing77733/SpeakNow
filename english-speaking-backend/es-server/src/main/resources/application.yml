@@ -68,6 +68,8 @@ aigw:
     app-id: 1437508905
   pronunciation:
     provider: chivox
+  tts:
+    provider: edgetts
   llm:
     provider: deepseek
     api-key: ${DEEPSEEK_API_KEY}

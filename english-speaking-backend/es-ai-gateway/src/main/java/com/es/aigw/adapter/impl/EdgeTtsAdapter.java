@@ -32,9 +32,9 @@ public class EdgeTtsAdapter implements TtsAdapter {
             // 创建临时文件
             tempFile = Files.createTempFile("tts-" + UUID.randomUUID(), ".mp3");
 
-            // 调用 edge-tts CLI
+            // 调用 edge-tts（Python 模块方式，兼容未加入 PATH 的环境）
             ProcessBuilder pb = new ProcessBuilder(
-                "edge-tts",
+                "python", "-m", "edge_tts",
                 "--text", text,
                 "--voice", selectedVoice,
                 "--write-media", tempFile.toAbsolutePath().toString()
