@@ -21,7 +21,8 @@
 
 # 3. 启动后端（端口 8088）
 cd english-speaking-backend
-mvn spring-boot:run -pl es-server
+# Windows: mvnw.cmd spring-boot:run -pl es-server
+# macOS/Linux: ./mvnw spring-boot:run -pl es-server
 
 # 4. 启动前端（端口 5173）
 cd english-speaking-frontend
