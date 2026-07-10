@@ -59,6 +59,8 @@ import AssignmentListPage from './pages/admin/teacher/AssignmentListPage'
 import AssignmentDetailPage from './pages/admin/teacher/AssignmentDetailPage'
 import ReportPage from './pages/admin/teacher/ReportPage'
 import MyClassesPage from './pages/student/MyClassesPage'
+import AssignmentConversationPage from './pages/student/AssignmentConversationPage'
+import AssignmentPronouncePage from './pages/student/AssignmentPronouncePage'
 
 // 运营端页面
 import UserManagePage from './pages/admin/operator/UserManagePage'
@@ -92,6 +94,8 @@ function App() {
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="my-classes" element={<MyClassesPage />} />
+            <Route path="student/assignment/:assignmentId/conversation" element={<AssignmentConversationPage />} />
+            <Route path="student/assignment/:assignmentId/pronounce" element={<AssignmentPronouncePage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/security" element={<SecurityPage />} />
             <Route path="assessment" element={<AssessmentPage />} />

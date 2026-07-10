@@ -18,6 +18,10 @@ public class AssignmentCreateDTO {
     private String description;
     private String assignmentType;
     private Long contentId;
+    private String contentIds;
+    private String sceneKey;
+    private String difficulty;
+    private Integer requiredRounds;
     private LocalDateTime deadline;
     private String publishType;
     private LocalDateTime publishAt;

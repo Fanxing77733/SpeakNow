@@ -56,6 +56,12 @@ public class JoinClassController {
         return Result.ok(assignmentService.getAssignmentsByClassIds(classIds));
     }
 
+    /** 学生查看单个作业详情（含场景/难度配置，供练习页使用） */
+    @GetMapping("/assignments/{assignmentId}")
+    public Result<Assignment> getAssignmentDetail(@PathVariable Long assignmentId) {
+        return Result.ok(assignmentService.getAssignmentDetail(assignmentId));
+    }
+
     /** 学生查看自己的提交记录和点评 */
     @GetMapping("/submissions")
     public Result<List<Map<String, Object>>> getMySubmissions() {
@@ -63,7 +69,7 @@ public class JoinClassController {
         return Result.ok(assignmentService.getStudentSubmissions(studentId));
     }
 
-    /** 学生提交作业 */
+    /** 学生提交作业（文本） */
     @PostMapping("/assignments/{assignmentId}/submit")
     public Result<String> submitAssignment(@PathVariable Long assignmentId,
                                             @RequestBody Map<String, String> body) {
@@ -71,6 +77,34 @@ public class JoinClassController {
         String text = body.getOrDefault("text", "");
         log.info("提交作业: studentId={}, assignmentId={}", studentId, assignmentId);
         assignmentService.submitAssignment(studentId, assignmentId, text);
+        return Result.ok("提交成功");
+    }
+
+    /** 学生以情景对话记录提交作业 */
+    @PostMapping("/assignments/{assignmentId}/submit-conversation")
+    public Result<String> submitConversation(@PathVariable Long assignmentId,
+                                              @RequestBody Map<String, Long> body) {
+        Long studentId = getCurrentUserId();
+        Long sessionId = body.get("sessionId");
+        if (sessionId == null) {
+            return Result.fail(400, "请提供对话记录ID");
+        }
+        log.info("对话提交作业: studentId={}, assignmentId={}, sessionId={}", studentId, assignmentId, sessionId);
+        assignmentService.submitConversationAssignment(studentId, assignmentId, sessionId);
+        return Result.ok("提交成功");
+    }
+
+    /** 学生以跟读练习记录提交作业 */
+    @PostMapping("/assignments/{assignmentId}/submit-pronounce")
+    public Result<String> submitPronounce(@PathVariable Long assignmentId,
+                                           @RequestBody Map<String, Long> body) {
+        Long studentId = getCurrentUserId();
+        Long recordId = body.get("recordId");
+        if (recordId == null) {
+            return Result.fail(400, "请提供练习记录ID");
+        }
+        log.info("跟读提交作业: studentId={}, assignmentId={}, recordId={}", studentId, assignmentId, recordId);
+        assignmentService.submitPronounceAssignment(studentId, assignmentId, recordId);
         return Result.ok("提交成功");
     }
 

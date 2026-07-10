@@ -32,6 +32,11 @@ export interface Assignment {
   title: string
   description?: string
   assignmentType: string
+  contentId?: number
+  contentIds?: string
+  sceneKey?: string
+  difficulty?: string
+  requiredRounds?: number
   deadline?: string
   status: string
   submitCount: number
@@ -102,9 +107,36 @@ export async function createAssignment(data: {
   title: string
   description?: string
   assignmentType: string
+  contentId?: number
+  contentIds?: string
+  sceneKey?: string
+  difficulty?: string
+  requiredRounds?: number
   deadline?: string
 }): Promise<Assignment> {
   return request({ method: 'POST', url: '/admin/teacher/assignments', data })
+}
+
+// ====== 学生端作业 API ======
+
+/** 获取单个作业详情（含场景/难度配置） */
+export async function getStudentAssignmentDetail(id: number): Promise<Assignment> {
+  return request({ method: 'GET', url: `/user/class/assignments/${id}` })
+}
+
+/** 文本提交作业 */
+export async function submitAssignmentText(assignmentId: number, text: string): Promise<void> {
+  return request({ method: 'POST', url: `/user/class/assignments/${assignmentId}/submit`, data: { text } })
+}
+
+/** 对话提交作业 */
+export async function submitAssignmentConversation(assignmentId: number, sessionId: number): Promise<void> {
+  return request({ method: 'POST', url: `/user/class/assignments/${assignmentId}/submit-conversation`, data: { sessionId } })
+}
+
+/** 跟读提交作业 */
+export async function submitAssignmentPronounce(assignmentId: number, recordId: number): Promise<void> {
+  return request({ method: 'POST', url: `/user/class/assignments/${assignmentId}/submit-pronounce`, data: { recordId } })
 }
 
 export async function getSubmissions(assignmentId: number): Promise<AssignmentSubmission[]> {
@@ -211,11 +243,23 @@ export interface AssignmentReport {
     submitted: boolean
     submissionId?: number
     content?: string
+    audioUrl?: string
     score?: number
     teacherScore?: number
     teacherReview?: string
     status?: string
     submittedAt?: string
+    practiceRecordId?: number
+    conversationMessages?: { round: number; role: string; content: string; audioUrl?: string }[]
+    pronounceDetail?: {
+      accuracyScore: number
+      fluencyScore: number
+      completenessScore: number
+      stressScore?: number
+      intonationScore?: number
+      durationSeconds?: number
+      evalDetailJson?: string
+    }
   }[]
   submittedCount: number
   totalStudents: number

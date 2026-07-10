@@ -11,6 +11,10 @@ interface ScoreModalProps {
   onNewSession: () => void
   onClose: () => void
   learningTaskId?: number
+  /** 作业提交回调 — 显示"提交作业"按钮 */
+  onSubmit?: () => void
+  /** 提交按钮是否禁用（正在提交中） */
+  submitting?: boolean
 }
 
 function useCountUp(target: number, duration: number = 800): number {
@@ -57,7 +61,7 @@ function getScoreColor(score: number): string {
   return '#EF4444'
 }
 
-const ScoreModal = ({ scoreResult, visible, onNewSession, onClose, learningTaskId }: ScoreModalProps) => {
+const ScoreModal = ({ scoreResult, visible, onNewSession, onClose, learningTaskId, onSubmit, submitting }: ScoreModalProps) => {
   const navigate = useNavigate()
   const displayTotal = useCountUp(scoreResult.totalScore)
   const totalColor = getScoreColor(scoreResult.totalScore)
@@ -199,21 +203,37 @@ const ScoreModal = ({ scoreResult, visible, onNewSession, onClose, learningTaskI
 
         {/* 底部按钮 */}
         <div className="px-6 pb-6 flex gap-3">
-          {learningTaskId && (
-            <button type="button" onClick={() => { onClose(); navigate('/learning') }}
-              className="flex-1 py-3 text-sm font-semibold text-white bg-emerald-500 rounded-xl hover:bg-emerald-600 transition-colors active:scale-95"
-              style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>
-              返回学习路径
-            </button>
+          {onSubmit ? (
+            <>
+              <button type="button" onClick={onClose}
+                className="flex-1 py-3 text-sm font-semibold text-teal-600 bg-teal-50 rounded-xl hover:bg-teal-100 transition-colors active:scale-95"
+                style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                再练一次
+              </button>
+              <button type="button" onClick={onSubmit} disabled={submitting}
+                className="clay-btn flex-1 py-3 text-sm disabled:opacity-50">
+                {submitting ? '提交中...' : '提交作业'}
+              </button>
+            </>
+          ) : (
+            <>
+              {learningTaskId && (
+                <button type="button" onClick={() => { onClose(); navigate('/learning') }}
+                  className="flex-1 py-3 text-sm font-semibold text-white bg-emerald-500 rounded-xl hover:bg-emerald-600 transition-colors active:scale-95"
+                  style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                  返回学习路径
+                </button>
+              )}
+              <button type="button" onClick={() => { onClose(); navigate('/progress') }}
+                className="flex-1 py-3 text-sm font-semibold text-teal-600 bg-teal-50 rounded-xl hover:bg-teal-100 transition-colors active:scale-95"
+                style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>
+                查看进度
+              </button>
+              <button type="button" onClick={onNewSession} className="clay-btn flex-1 py-3 text-sm">
+                再来一局
+              </button>
+            </>
           )}
-          <button type="button" onClick={() => { onClose(); navigate('/progress') }}
-            className="flex-1 py-3 text-sm font-semibold text-teal-600 bg-teal-50 rounded-xl hover:bg-teal-100 transition-colors active:scale-95"
-            style={{ fontFamily: 'Poppins, system-ui, sans-serif' }}>
-            查看进度
-          </button>
-          <button type="button" onClick={onNewSession} className="clay-btn flex-1 py-3 text-sm">
-            再来一局
-          </button>
         </div>
       </div>
     </div>

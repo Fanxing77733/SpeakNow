@@ -26,6 +26,12 @@ public interface AssignmentService {
 
     void submitAssignment(Long studentId, Long assignmentId, String text);
 
+    /** 以情景对话记录提交作业 */
+    void submitConversationAssignment(Long studentId, Long assignmentId, Long sessionId);
+
+    /** 以跟读练习记录提交作业 */
+    void submitPronounceAssignment(Long studentId, Long assignmentId, Long recordId);
+
     Map<String, Object> getAssignmentReport(Long assignmentId, Long teacherId);
 
     List<Map<String, Object>> getStudentSubmissions(Long studentId);

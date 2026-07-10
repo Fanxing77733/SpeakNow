@@ -12,6 +12,12 @@ const TYPE_LABELS: Record<string, string> = {
   GRAMMAR: '语法练习',
 }
 
+const TYPE_COLORS: Record<string, string> = {
+  PRONOUNCE: 'bg-blue-50 text-blue-600',
+  CONVERSATION: 'bg-purple-50 text-purple-600',
+  GRAMMAR: 'bg-green-50 text-green-600',
+}
+
 export default function MyClassesPage() {
   const navigate = useNavigate()
   const [classes, setClasses] = useState<ClassInfo[]>([])
@@ -44,7 +50,7 @@ export default function MyClassesPage() {
 
   useEffect(() => { load() }, [load])
 
-  const handleSubmit = async (assignmentId: number) => {
+  const handleSubmitText = async (assignmentId: number) => {
     if (!submitText.trim()) return
     setSubmitting(assignmentId)
     try {
@@ -61,6 +67,18 @@ export default function MyClassesPage() {
       }
     } finally {
       setSubmitting(null)
+    }
+  }
+
+  const handleStartAssignment = (a: Assignment) => {
+    if (a.assignmentType === 'CONVERSATION') {
+      navigate(`/student/assignment/${a.id}/conversation`)
+    } else if (a.assignmentType === 'PRONOUNCE') {
+      navigate(`/student/assignment/${a.id}/pronounce`)
+    } else {
+      // GRAMMAR 或未知类型：弹出文本框
+      setShowSubmit(a.id)
+      setSubmitText('')
     }
   }
 
@@ -148,10 +166,13 @@ export default function MyClassesPage() {
             <div className="space-y-3">
               {assignments.map((a) => {
                 const className = classes.find(c => c.id === a.classId)?.name || '未知班级'
+                const isConversation = a.assignmentType === 'CONVERSATION'
+                const isPronounce = a.assignmentType === 'PRONOUNCE'
+                const isVoiceType = isConversation || isPronounce
                 return (
                   <div key={a.id} className="border border-gray-100 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${TYPE_COLORS[a.assignmentType] || 'bg-gray-50 text-gray-600'}`}>
                         {TYPE_LABELS[a.assignmentType] || a.assignmentType}
                       </span>
                       <span className="text-xs text-gray-400">{a.createdAt?.slice(0, 10)}</span>
@@ -159,14 +180,20 @@ export default function MyClassesPage() {
                     <h3 className="text-sm font-medium text-gray-900">{a.title}</h3>
                     <p className="text-xs text-gray-400 mt-0.5">{className} · 已提交{a.submitCount}人</p>
                     {a.description && <p className="text-xs text-gray-500 mt-1">{a.description}</p>}
+                    {isVoiceType && a.difficulty && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        难度: {a.difficulty === 'EASY' ? '简单' : a.difficulty === 'HARD' ? '困难' : '中等'}
+                        {isConversation && a.requiredRounds ? ` · ${a.requiredRounds}轮` : ''}
+                      </p>
+                    )}
                     {submittedIds.has(a.id) ? (
                       <span className="inline-block mt-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">已提交</span>
                     ) : (
                       <button
-                        onClick={() => { setShowSubmit(a.id); setSubmitText('') }}
-                        className="mt-2 text-xs text-white bg-blue-600 px-3 py-1 rounded hover:bg-blue-700"
+                        onClick={() => isVoiceType ? handleStartAssignment(a) : setShowSubmit(a.id)}
+                        className={`mt-2 text-xs text-white px-3 py-1 rounded hover:opacity-90 ${isVoiceType ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                       >
-                        提交作业
+                        {isConversation ? '开始练习' : isPronounce ? '开始跟读' : '提交作业'}
                       </button>
                     )}
                   </div>
@@ -190,13 +217,21 @@ export default function MyClassesPage() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-900">{s.assignmentTitle}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${TYPE_COLORS[s.assignmentType] || 'bg-gray-100 text-gray-600'}`}>
+                        {TYPE_LABELS[s.assignmentType] || s.assignmentType}
+                      </span>
                       <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
                         {s.status === 'REVIEWED' ? '已批改' : '已提交'}
                       </span>
                     </div>
                     <span className="text-xs text-gray-400">{s.submittedAt?.slice(0, 10)}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{s.content?.slice(0, 80)}{(s.content?.length > 80) ? '...' : ''}</p>
+                  {s.score != null && (
+                    <p className="text-xs text-gray-500 mt-1">AI评分: {s.score}</p>
+                  )}
+                  {s.content && (
+                    <p className="text-xs text-gray-500 mt-1">{s.content?.slice(0, 80)}{(s.content?.length > 80) ? '...' : ''}</p>
+                  )}
                   {s.status === 'REVIEWED' && (
                     <div className="mt-2 bg-blue-50 rounded-lg p-3">
                       <div className="flex items-center gap-3 mb-1">
@@ -215,7 +250,7 @@ export default function MyClassesPage() {
         </div>
       </div>
 
-      {/* 提交作业弹窗 */}
+      {/* 提交作业弹窗（仅 GRAMMAR 类型使用） */}
       {showSubmit !== null && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 max-w-sm w-full">
@@ -230,7 +265,7 @@ export default function MyClassesPage() {
             <div className="flex gap-2">
               <button onClick={() => setShowSubmit(null)}
                 className="flex-1 py-2 border rounded-lg text-sm">取消</button>
-              <button onClick={() => handleSubmit(showSubmit!)}
+              <button onClick={() => handleSubmitText(showSubmit!)}
                 disabled={submitting === showSubmit}
                 className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm disabled:opacity-50">
                 {submitting === showSubmit ? '提交中...' : '提交'}
