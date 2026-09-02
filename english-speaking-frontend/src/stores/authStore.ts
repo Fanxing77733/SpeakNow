@@ -1,4 +1,4 @@
-// TODO: 生产环境替换为 httpOnly Cookie，当前开发阶段使用 localStorage 存 JWT Token
+// TODO: 生产环境替换为 httpOnly Cookie，当前开发阶段使用 sessionStorage 存 JWT Token（标签页隔离）
 import { create } from 'zustand'
 import axios from 'axios'
 import type { User, LoginDTO, RegisterDTO, UpdateProfileDTO } from '../types/auth'
@@ -82,16 +82,16 @@ function extractErrorMessage(error: unknown): string {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  // 初始状态：从 localStorage 恢复 Token（开发阶段）
-  token: localStorage.getItem('auth_token'),
+  // 初始状态：从 sessionStorage 恢复 Token（标签页隔离，避免多账号登录串号）
+  token: sessionStorage.getItem('auth_token'),
   user: null,
-  isAuthenticated: !!localStorage.getItem('auth_token'),
+  isAuthenticated: !!sessionStorage.getItem('auth_token'),
   isLoading: false,
   error: null,
 
   setAuth: (token: string, user: User) => {
-    // 开发阶段存 localStorage
-    localStorage.setItem('auth_token', token)
+    // 使用 sessionStorage 实现标签页隔离
+    sessionStorage.setItem('auth_token', token)
     set({ token, user, isAuthenticated: true, error: null })
   },
 
@@ -122,7 +122,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('auth_token')
+    sessionStorage.removeItem('auth_token')
     set({ token: null, user: null, isAuthenticated: false, error: null })
   },
 

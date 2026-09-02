@@ -1,8 +1,8 @@
 /**
  * 水平测评页 — V3.0 随机30题测评
  *
- * 从50题池随机抽取：听力10 + 词汇7 + 语法7 + 阅读6
- * 每次测评题目不同，题型混合出现。
+ * 从题库随机抽取：听力10 + 词汇7 + 语法7 + 阅读6
+ * 每次测评题目不同，同题型集中排列（听力→词汇→语法→阅读）。
  * 听力题使用后端 Edge TTS 合成真实语音，绝不展示听力原文。
  */
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -88,16 +88,23 @@ const AssessmentPage = () => {
   useEffect(() => { answersRef.current = answers }, [answers])
   useEffect(() => { submittingRef.current = submitting }, [submitting])
 
+  /** 停止所有正在播放的音频（TTS 音频 + 浏览器语音合成） */
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    window.speechSynthesis?.cancel()
+  }, [])
+
   // 组件卸载时清理音频和缓存
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-      }
+      stopAudio()
       audioCacheRef.current.forEach((url) => URL.revokeObjectURL(url))
       audioCacheRef.current.clear()
     }
-  }, [])
+  }, [stopAudio])
 
   /** 通过后端 Edge TTS 合成真实语音并播放，失败降级到浏览器 TTS */
   async function playListeningAudio(text: string, autoPlay: boolean = false): Promise<void> {
@@ -260,16 +267,6 @@ const AssessmentPage = () => {
     setTimeout(() => advanceOrSubmit(idx, qs, newAnswers), TRANSITION_MS)
   }, [])
 
-  const advanceOrSubmit = useCallback((idx: number, qs: QuestionVO[], allAnswers: AnswerItem[]) => {
-    if (idx < qs.length - 1) {
-      setCurrentIndex(idx + 1)
-      setIsTransitioning(false)
-      isTransitioningRef.current = false
-    } else {
-      submitAll(allAnswers)
-    }
-  }, [])
-
   const submitAll = useCallback(async (allAnswers: AnswerItem[]) => {
     if (submittingRef.current) return
     submittingRef.current = true
@@ -301,6 +298,17 @@ const AssessmentPage = () => {
       }
     }
   }, [navigate])
+
+  const advanceOrSubmit = useCallback((idx: number, qs: QuestionVO[], allAnswers: AnswerItem[]) => {
+    stopAudio()
+    if (idx < qs.length - 1) {
+      setCurrentIndex(idx + 1)
+      setIsTransitioning(false)
+      isTransitioningRef.current = false
+    } else {
+      submitAll(allAnswers)
+    }
+  }, [stopAudio, submitAll])
 
   // ---- 渲染 ----
 

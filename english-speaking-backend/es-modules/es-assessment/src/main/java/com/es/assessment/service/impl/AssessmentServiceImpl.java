@@ -81,8 +81,8 @@ public class AssessmentServiceImpl implements AssessmentService {
         shuffleAndAdd(selected, grammarPool, GRAMMAR_COUNT);
         shuffleAndAdd(selected, readingPool, READING_COUNT);
 
-        // 5. 打乱顺序（确保题型混合出现）
-        Collections.shuffle(selected, new Random(System.nanoTime()));
+        // 5. 同题型集中排列（听力→词汇→语法→阅读），组内随机
+        // 不再 shuffle 整体列表，保持题型分组体验
 
         // 6. 返回前 30 题（白名单过滤）
         return selected.stream()

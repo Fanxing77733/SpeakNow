@@ -73,13 +73,22 @@ const AdaptiveAssessmentPage = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  /** 停止所有正在播放的音频（TTS 音频 + 浏览器语音合成） */
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    window.speechSynthesis?.cancel()
+  }, [])
+
   // 清理 timer / audio
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
-      if (audioRef.current) audioRef.current.pause()
+      stopAudio()
     }
-  }, [])
+  }, [stopAudio])
 
   /** 通过后端 Edge TTS 合成真实语音并播放，失败降级到浏览器 TTS */
   async function playListeningAudio(text: string): Promise<void> {
@@ -151,6 +160,7 @@ const AdaptiveAssessmentPage = () => {
   const handleAnswer = async (key: string) => {
     if (timerRef.current) clearInterval(timerRef.current)
     if (!question) return
+    stopAudio()
     setLoading(true)
     try {
       const data = await request<AdaptiveResponse>({

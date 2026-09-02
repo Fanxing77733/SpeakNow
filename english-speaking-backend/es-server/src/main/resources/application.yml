@@ -18,7 +18,7 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:mysql://localhost:3306/english_speaking?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/english_speaking?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -63,16 +63,16 @@ aigw:
   rate-limit-per-minute: 60
   asr:
     provider: tencent
-    secret-id: ${TENCENT_SECRET_ID}
-    secret-key: ${TENCENT_SECRET_KEY}
-    app-id: 1437508905
+    secret-id: ${TENCENT_SECRET_ID:}
+    secret-key: ${TENCENT_SECRET_KEY:}
+    app-id: ${TENCENT_APP_ID:1437508905}
   pronunciation:
     provider: chivox
   tts:
     provider: edgetts
   llm:
     provider: deepseek
-    api-key: ${DEEPSEEK_API_KEY}
+    api-key: ${DEEPSEEK_API_KEY:}
     base-url: https://api.deepseek.com/v1
 
 ---
@@ -82,7 +82,7 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/english_speaking?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/english_speaking?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=true&allowPublicKeyRetrieval=true
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:root}
   data:
